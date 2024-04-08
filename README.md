@@ -6,6 +6,7 @@ Before running the project you need to create a database. Run the .ddl file that
 After creating the database you need to create a new config file in the src/main/resources directory named
 external_config.yml with template below:
 
+```yaml
 server:
     port: [SERVER_PORT]
 spring:
