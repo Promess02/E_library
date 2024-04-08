@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: E_Library
+  config:
+    import: external_config.yml
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        format_sql: true
+    show_sql: true
