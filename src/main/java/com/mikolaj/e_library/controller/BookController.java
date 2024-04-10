@@ -12,6 +12,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/book")
+@CrossOrigin(origins = "http://localhost:3000") // Add @CrossOrigin annotation to enable CORS for this method
 public class BookController {
     private final BookRepository bookRepository;
     private final BookCopyRepository bookCopyRepository;
