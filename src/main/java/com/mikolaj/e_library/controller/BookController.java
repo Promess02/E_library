@@ -34,7 +34,14 @@ public class BookController {
         return ResponseUtil.okResponse(response.getMessage(), "Books", response.getData());
     }
     
-
+    /*
+        {
+        "filter": "ada",
+        "filterBy": "title",
+        "page": 0,
+        "size": 3
+        }
+    */
     @PostMapping("/getAllPaginated")
     public ResponseEntity<?> getBooks(@RequestBody Pagination pagination){
         Page<Book> booksPage;
