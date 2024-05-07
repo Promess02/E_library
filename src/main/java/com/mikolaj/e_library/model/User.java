@@ -32,13 +32,13 @@ public class User implements Serializable {
 	@Column(name="email", nullable=false, length=255)	
 	private String email;
 	
-	@Column(name="phoneNumber", nullable=true, length=255)	
+	@Column(name="phone_number", nullable=true, length=255)
 	private String phoneNumber;
 	
 	@Column(name="password", nullable=false, length=255)	
 	private String password;
 	
-	@Column(name="imageUrl", nullable=true, length=255)	
+	@Column(name="image_url", nullable=true, length=255)
 	private String imageUrl;
 
 	

@@ -3,6 +3,10 @@ package com.mikolaj.e_library.model;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.mikolaj.e_library.DTO.BookCategory;
+import com.mikolaj.e_library.DTO.BookType;
+import com.mikolaj.e_library.Persistence.BookCategoryConverter;
+import com.mikolaj.e_library.Persistence.BookTypeConverter;
 import com.mikolaj.e_library.Persistence.CustomDateDeserializer;
 import com.mikolaj.e_library.Persistence.CustomDateSerializer;
 import jakarta.persistence.*;
@@ -20,34 +24,36 @@ public class Book implements Serializable {
 	public Book() {
 	}
 	
-	@Column(name="bookId", nullable=false, unique=true, length=10)	
+	@Column(name="book_id", nullable=false, unique=true, length=10)
 	@Id	
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	//@org.hibernate.annotations.GenericGenerator(name="COM_MIKOLAJ_BOOK_BOOKID_GENERATOR", strategy="identity")
 	private int bookId;
 	
-	@Column(name="bookType", nullable=false)
-	private String bookType;
+	@Column(name="book_type", nullable=false)
+	@Convert(converter = BookTypeConverter.class)
+	private BookType bookType;
 	
 	@Column(name="title", nullable=false)
 	private String title;
 	
-	@Column(name="releaseDate", nullable=false)	
+	@Column(name="release_date", nullable=false)
 	@Temporal(TemporalType.DATE)
 	@JsonSerialize(using = CustomDateSerializer.class)
 	@JsonDeserialize(using = CustomDateDeserializer.class)
 	private java.util.Date releaseDate;
 	
-	@Column(name="bookCategory", nullable=false)
-	private String bookCategory;
+	@Column(name="book_category", nullable=false)
+	@Convert(converter = BookCategoryConverter.class)
+	private BookCategory bookCategory;
 	
-	@Column(name="AverageBookRating", length=10)
+	@Column(name="Average_book_rating", length=10)
 	private Float averageBookRating;
 	
-	@Column(name="imageUrl")
+	@Column(name="image_url")
 	private String imageUrl;
 	
-	@Column(name="bookAuthor", nullable=false)
+	@Column(name="book_author", nullable=false)
 	private String bookAuthor;
 	
 	@Column(name="description")

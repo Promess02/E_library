@@ -12,12 +12,12 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @org.hibernate.annotations.Proxy(lazy=false)
-@Table(name="BookRating", indexes={ @Index(name="FKBookRating94942", columnList="bookId"), @Index(name="FKBookRating629623", columnList="readerId") })
+@Table(name="book_rating")
 public class BookRating implements Serializable {
 	public BookRating() {
 	}
 	
-	@Column(name="bookRatingId", nullable=false, unique=true, length=10)	
+	@Column(name="book_rating_id", nullable=false, unique=true, length=10)
 	@Id	
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	//@org.hibernate.annotations.GenericGenerator(name="COM_MIKOLAJ_BOOKRATING_BOOKRATINGID_GENERATOR", strategy="identity")
@@ -26,11 +26,15 @@ public class BookRating implements Serializable {
 	@Column(name="rating", nullable=false, length=10)	
 	private int rating;
 	
-	@Column(name="bookId", nullable=false, length=10)	
-	private int bookId;
+//	@Column(name="book", nullable=false, length=10)
+	@ManyToOne(fetch=FetchType.EAGER)
+	@JoinColumn(name = "book_id")
+	private Book book;
 	
-	@Column(name="readerId", nullable=false, length=10)	
-	private int readerId;
+//	@Column(name="reader", nullable=false, length=10)
+	@OneToOne(fetch=FetchType.EAGER)
+	@JoinColumn(name = "reader_id")
+	private Reader Reader;
 
 
 	public String toString() {

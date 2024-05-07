@@ -10,22 +10,24 @@ import lombok.Setter;
 @org.hibernate.annotations.Proxy(lazy=false)
 @Getter
 @Setter
-@Table(name="EmployeeManager", indexes={ @Index(name="FKEmployeeMa917923", columnList="UserId") })
+@Table(name="employee_manager")
 public class EmployeeManager implements Serializable {
 	public EmployeeManager() {
 	}
 	
-	@Column(name="empManId", nullable=false, unique=true, length=10)	
+	@Column(name="emp_man_id", nullable=false, unique=true, length=10)
 	@Id	
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	//@org.hibernate.annotations.GenericGenerator(name="COM_MIKOLAJ_EMPLOYEEMANAGER_EMPMANID_GENERATOR", strategy="identity")
 	private int empManId;
 	
-	@Column(name="monthlyPay", length=10)
+	@Column(name="monthly_pay", length=10)
 	private Integer monthlyPay;
 	
-	@Column(name="UserId", nullable=false, length=10)	
-	private int userId;
+//	@Column(name="user", nullable=false, length=10)
+	@OneToOne(fetch = FetchType.EAGER)
+	@JoinColumn(name = "Id")
+	private User user;
 
 	
 	public String toString() {

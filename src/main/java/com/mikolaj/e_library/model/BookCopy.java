@@ -13,6 +13,12 @@
  */
 package com.mikolaj.e_library.model;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.mikolaj.e_library.DTO.RentalStatus;
+import com.mikolaj.e_library.Persistence.CustomDateDeserializer;
+import com.mikolaj.e_library.Persistence.CustomDateSerializer;
+import com.mikolaj.e_library.Persistence.RentalStatusConverter;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -23,35 +29,42 @@ import java.io.Serializable;
 @Entity
 @Setter
 @org.hibernate.annotations.Proxy(lazy=false)
-@Table(name="BookCopy", indexes={ @Index(name="FKBookCopy866098", columnList="addedBy"), @Index(name="FKBookCopy48701", columnList="BookId") })
+@Table(name="book_copy")
 public class BookCopy implements Serializable {
 	public BookCopy() {
 	}
 	
-	@Column(name="copyId", nullable=false, unique=true, length=10)	
+	@Column(name="copy_id", nullable=false, unique=true, length=10)
 	@Id	
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	//@org.hibernate.annotations.GenericGenerator(name="COM_MIKOLAJ_BOOKCOPY_COPYID_GENERATOR", strategy="identity")
 	private int copyId;
 	
-	@Column(name="rentalStatus", nullable=false)
-	private String rentalStatus;
+	@Column(name="rental_status", nullable=false)
+	@Convert(converter = RentalStatusConverter.class)
+	private RentalStatus rentalStatus = RentalStatus.FREE;
 	
-	@Column(name="shelfPlace")
+	@Column(name="shelf_place")
 	private String shelfPlace;
 	
-	@Column(name="dateOfPurchase", nullable=false)	
-	@Temporal(TemporalType.DATE)	
+	@Column(name="date_of_purchase", nullable=false)
+	@Temporal(TemporalType.DATE)
+	@JsonSerialize(using = CustomDateSerializer.class)
+	@JsonDeserialize(using = CustomDateDeserializer.class)
 	private java.util.Date dateOfPurchase;
 	
-	@Column(name="qualityStatus", nullable=false)
+	@Column(name="quality_status", nullable=false)
 	private String qualityStatus;
 	
-	@Column(name="BookId", nullable=false, length=10)	
-	private int bookId;
+//	@Column(name="book", nullable=false, length=10)
+	@ManyToOne(fetch = FetchType.EAGER, optional = false)
+	@JoinColumn(name = "book_id")
+	private Book book;
 	
-	@Column(name="addedBy", nullable=false, length=10)	
-	private int addedBy;
+//	@Column(name="addedBy", nullable=false, length=10)
+	@ManyToOne(fetch = FetchType.EAGER)
+	@JoinColumn(name = "worker_id")
+	private Worker addedBy;
 
 	public String toString() {
 		return String.valueOf(getCopyId());

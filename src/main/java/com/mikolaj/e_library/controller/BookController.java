@@ -33,7 +33,7 @@ public class BookController {
         if(response.getData().isEmpty()) return ResponseUtil.okResponse("no activities found", "Activity", Optional.empty());
         return ResponseUtil.okResponse(response.getMessage(), "Books", response.getData());
     }
-    
+
     /*
         {
         "filter": "ada",

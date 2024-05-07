@@ -11,12 +11,12 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @org.hibernate.annotations.Proxy(lazy=false)
-@Table(name="NewsPost", indexes={ @Index(name="FKNewsPost131685", columnList="workerId") })
+@Table(name="news_post")
 public class NewsPost implements Serializable {
 	public NewsPost() {
 	}
 	
-	@Column(name="postId", nullable=false, unique=true, length=10)	
+	@Column(name="post_id", nullable=false, unique=true, length=10)
 	@Id	
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	//@org.hibernate.annotations.GenericGenerator(name="COM_MIKOLAJ_NEWSPOST_POSTID_GENERATOR", strategy="identity")
@@ -28,11 +28,13 @@ public class NewsPost implements Serializable {
 	@Column(name="contents", nullable=false)
 	private String contents;
 	
-	@Column(name="imageUrl")
+	@Column(name="image_url")
 	private String imageUrl;
 	
-	@Column(name="workerId", nullable=false, length=10)	
-	private int workerId;
+//	@Column(name="worker", nullable=false, length=10)
+	@ManyToOne(fetch = FetchType.EAGER)
+	@JoinColumn(name = "worker_id")
+	private Worker worker;
 
 	
 	public String toString() {

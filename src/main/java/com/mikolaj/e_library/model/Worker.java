@@ -24,25 +24,29 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @org.hibernate.annotations.Proxy(lazy=false)
-@Table(name="Worker", indexes={ @Index(name="FKWorker234681", columnList="UserId"), @Index(name="FKWorker175065", columnList="employedBy") })
+@Table(name="Worker")
 public class Worker implements Serializable {
 	public Worker() {
 	}
 	
-	@Column(name="workerId", nullable=false, unique=true, length=10)	
+	@Column(name="worker_id", nullable=false, unique=true, length=10)
 	@Id	
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	//@org.hibernate.annotations.GenericGenerator(name="COM_MIKOLAJ_WORKER_WORKERID_GENERATOR", strategy="identity")
 	private int workerId;
 	
-	@Column(name="monthlyPay", nullable=true, length=10)	
+	@Column(name="monthly_pay", nullable=true, length=10)
 	private Integer monthlyPay;
 	
-	@Column(name="UserId", nullable=false, length=10)	
-	private int userId;
-	
-	@Column(name="employedBy", nullable=false, length=10)	
-	private int employedBy;
+//	@Column(name="user", nullable=false, length=10)
+	@OneToOne(fetch = FetchType.EAGER)
+	@JoinColumn(name = "Id")
+	private User userId;
+
+//	@Column(name="employedBy", nullable=false, length=10)
+	@ManyToOne(fetch = FetchType.EAGER)
+	@JoinColumn(name = "emp_man_id")
+	private EmployeeManager employedBy;
 	
 	public String toString() {
 		return String.valueOf(getWorkerId());

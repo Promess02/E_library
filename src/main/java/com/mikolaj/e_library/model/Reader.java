@@ -15,58 +15,36 @@ package com.mikolaj.e_library.model;
 
 import java.io.Serializable;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 @Entity
 @org.hibernate.annotations.Proxy(lazy=false)
-@Table(name="Reader", indexes={ @Index(name="FKReader340389", columnList="UserId") })
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+@Table(name="Reader")
 public class Reader implements Serializable {
-	public Reader() {
-	}
-	
-	@Column(name="readerId", nullable=false, unique=true, length=10)	
+
+	@Column(name="reader_id", nullable=false, unique=true, length=10)
 	@Id	
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	//@org.hibernate.annotations.GenericGenerator(name="COM_MIKOLAJ_READER_READERID_GENERATOR", strategy="identity")
 	private int readerId;
-	
-	@Column(name="penalty", nullable=true, length=10)	
+
+    @Column(name="penalty", nullable=true, length=10)
 	private Integer penalty;
 	
-	@Column(name="UserId", nullable=false, length=10)	
-	private int userId;
-	
-	private void setReaderId(int value) {
-		this.readerId = value;
-	}
-	
-	public int getReaderId() {
-		return readerId;
-	}
-	
-	public int getORMID() {
-		return getReaderId();
-	}
-	
-	public void setPenalty(int value) {
-		setPenalty(Integer.valueOf(value));
-	}
-	
-	public void setPenalty(Integer value) {
-		this.penalty = value;
-	}
-	
-	public Integer getPenalty() {
-		return penalty;
-	}
-	
-	public void setUserId(int value) {
-		this.userId = value;
-	}
-	
-	public int getUserId() {
-		return userId;
-	}
-	
-	public String toString() {
+//	@Column(name="user", nullable=false, length=10)
+	@JoinColumn(name = "Id")
+	@OneToOne
+	private User user;
+
+
+    public String toString() {
 		return String.valueOf(getReaderId());
 	}
 	

@@ -24,25 +24,29 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @org.hibernate.annotations.Proxy(lazy=false)
-@Table(name="WarehouseManager", indexes={ @Index(name="FKWarehouseM834539", columnList="UserId"), @Index(name="FKWarehouseM424793", columnList="employedBy") })
+@Table(name="warehouse_manager")
 public class WarehouseManager implements Serializable {
 	public WarehouseManager() {
 	}
 	
-	@Column(name="wareManId", nullable=false, unique=true, length=10)	
+	@Column(name="ware_man_id", nullable=false, unique=true, length=10)
 	@Id	
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	//@org.hibernate.annotations.GenericGenerator(name="COM_MIKOLAJ_WAREHOUSEMANAGER_WAREMANID_GENERATOR", strategy="identity")
 	private int wareManId;
 	
-	@Column(name="monthlyPay", nullable=true, length=10)	
+	@Column(name="monthly_pay", nullable=true, length=10)
 	private Integer monthlyPay;
 	
-	@Column(name="UserId", nullable=false, length=10)	
-	private int userId;
+//	@Column(name="user", nullable=false, length=10)
+	@OneToOne(fetch = FetchType.EAGER)
+	@JoinColumn(name = "Id")
+	private User user;
 	
-	@Column(name="employedBy", nullable=false, length=10)	
-	private int employedBy;
+//	@Column(name="employedBy", nullable=false, length=10)
+	@ManyToOne(fetch = FetchType.EAGER)
+	@JoinColumn(name = "emp_man_id")
+	private EmployeeManager employedBy;
 
 	
 	public String toString() {
