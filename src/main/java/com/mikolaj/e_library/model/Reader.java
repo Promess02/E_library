@@ -36,15 +36,19 @@ public class Reader implements Serializable {
 	private int readerId;
 
     @Column(name="penalty", nullable=true, length=10)
-	private Integer penalty;
+	private Float penalty;
 	
 //	@Column(name="user", nullable=false, length=10)
 	@JoinColumn(name = "Id")
 	@OneToOne
 	private User user;
 
+	public Reader(User user) {
+		this.user = user;
+		penalty = 0f;
+	}
 
-    public String toString() {
+	public String toString() {
 		return String.valueOf(getReaderId());
 	}
 	

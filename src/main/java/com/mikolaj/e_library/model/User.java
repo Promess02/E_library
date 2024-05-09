@@ -41,7 +41,14 @@ public class User implements Serializable {
 	@Column(name="image_url", nullable=true, length=255)
 	private String imageUrl;
 
-	
+	public User(String name, String surname, String email, String phoneNumber, String password) {
+		this.name = name;
+		this.surname = surname;
+		this.email = email;
+		this.phoneNumber = phoneNumber;
+		this.password = password;
+	}
+
 	public String toString() {
 		return String.valueOf(getId());
 	}

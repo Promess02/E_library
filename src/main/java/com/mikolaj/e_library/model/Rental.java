@@ -2,6 +2,7 @@
 package com.mikolaj.e_library.model;
 
 import java.io.Serializable;
+import java.util.Date;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -21,8 +22,6 @@ import lombok.Setter;
 @org.hibernate.annotations.Proxy(lazy=false)
 @Table(name="Rental")
 public class Rental implements Serializable {
-	public Rental() {
-	}
 	
 	@Column(name="rental_id", nullable=false, unique=true, length=10)
 	@Id	
@@ -49,7 +48,7 @@ public class Rental implements Serializable {
 	private boolean isProlonged;
 	
 	@Column(name="penalty", length=10)
-	private Integer penalty;
+	private Float penalty;
 	
 	@Column(name="status", nullable=false)
 	@Convert(converter = RentalStatusConverter.class)
@@ -65,7 +64,22 @@ public class Rental implements Serializable {
 	@JoinColumn(name = "copy_id")
 	private BookCopy bookCopy;
 
-	
+	public Rental(){
+		isProlonged = false;
+		penalty = 0f;
+		status = RentalStatus.INACTIVE;
+	}
+
+	public Rental(Reader reader, BookCopy bookCopy, int timeOfRentalInWeeks) {
+		this.reader = reader;
+		this.bookCopy = bookCopy;
+		this.timeOfRentalInWeeks = timeOfRentalInWeeks;
+		rentalDate = new Date(System.currentTimeMillis());
+		penalty = 0f;
+		isProlonged = false;
+
+	}
+
 	public String toString() {
 		return String.valueOf(getRentalId());
 	}

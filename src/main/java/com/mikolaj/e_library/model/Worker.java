@@ -38,16 +38,20 @@ public class Worker implements Serializable {
 	@Column(name="monthly_pay", nullable=true, length=10)
 	private Integer monthlyPay;
 	
-//	@Column(name="user", nullable=false, length=10)
 	@OneToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "Id")
-	private User userId;
+	private User user;
 
-//	@Column(name="employedBy", nullable=false, length=10)
 	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "emp_man_id")
 	private EmployeeManager employedBy;
-	
+
+	public Worker(Integer monthlyPay, User user, EmployeeManager employedBy) {
+		this.monthlyPay = monthlyPay;
+		this.user = user;
+		this.employedBy = employedBy;
+	}
+
 	public String toString() {
 		return String.valueOf(getWorkerId());
 	}

@@ -1,6 +1,8 @@
 package com.mikolaj.e_library.model;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
+
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -27,6 +29,9 @@ public class NewsPost implements Serializable {
 	
 	@Column(name="contents", nullable=false)
 	private String contents;
+
+	@Column(name = "create_time")
+	private LocalDateTime createTime;
 	
 	@Column(name="image_url")
 	private String imageUrl;
