@@ -29,7 +29,11 @@ public class EmployeeManager implements Serializable {
 	@JoinColumn(name = "Id")
 	private User user;
 
-	
+	public EmployeeManager(Integer monthlyPay, User user) {
+		this.monthlyPay = monthlyPay;
+		this.user = user;
+	}
+
 	public String toString() {
 		return String.valueOf(getEmpManId());
 	}

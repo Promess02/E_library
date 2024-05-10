@@ -4,10 +4,7 @@ import com.mikolaj.e_library.Consts;
 import com.mikolaj.e_library.DTO.*;
 import com.mikolaj.e_library.model.*;
 import com.mikolaj.e_library.repo.*;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -51,15 +48,28 @@ public class ReaderService {
                 readerRepository.getById(oldReader.getReaderId())), "Updated Reader");
     }
 
-    public ServiceResponse<Rental> bookRental(Book book, Reader reader, int rentalTimeInWeeks){
+    public ServiceResponse<Rental> bookRental(RentalForm rentalForm){
 
-        List<BookCopy> copies = bookCopyRepository.findBookCopiesByBook(book);
+        Optional<Book> book;
+        Optional<Reader> reader;
+
+        if(!bookRepository.existsById(rentalForm.getBookId())){
+            return new ServiceResponse<>(Optional.empty(), "Book Not Found");
+        }else{
+            book = bookRepository.findById(rentalForm.getBookId());
+        }
+
+        if(!readerRepository.existsById(rentalForm.getReaderId())){
+            return new ServiceResponse<>(Optional.empty(), "Reader Not Found");
+        }else{
+            reader = readerRepository.findById(rentalForm.getReaderId());
+        }
+
+        List<BookCopy> copies = bookCopyRepository.findBookCopiesByBook(book.get());
         if(copies.isEmpty()){
             return new ServiceResponse<>(Optional.empty(), "Book Copies Not Found");
         }
-        if(!readerRepository.existsById(reader.getReaderId())){
-            return new ServiceResponse<>(Optional.empty(), "reader not found");
-        }
+
         BookCopy rentedCopy = null;
         for(BookCopy copy : copies)
             if(copy.getRentalStatus().equals(RentalStatus.FREE)){
@@ -71,7 +81,7 @@ public class ReaderService {
 
         rentedCopy.setRentalStatus(RentalStatus.RENTED);
         bookCopyRepository.save(rentedCopy);
-        Rental rental = new Rental(reader, rentedCopy, rentalTimeInWeeks);
+        Rental rental = new Rental(reader.get(), rentedCopy, rentalForm.getRentalInWeeks());
         rental.setStatus(RentalStatus.ACTIVE);
         rentalRepository.save(rental);
 
@@ -129,8 +139,11 @@ public class ReaderService {
         return new ServiceResponse<>(Optional.of(mathcingList), "Active rentals found");
     }
 
-    public ServiceResponse<Rental> prolongateRental(Rental rental, int prolongationInWeeks){
-        if(!rentalRepository.existsById(rental.getRentalId())){
+    public ServiceResponse<Rental> prolongateRental(ProlongateForm prolongateForm){
+
+        int prolongationInWeeks = prolongateForm.getProlongationInWeeks();
+        Rental rental = rentalRepository.findById(prolongateForm.getRentalId()).orElse(null);
+        if(rental == null){
             return new ServiceResponse<>(Optional.empty(),"Rental not found");
         }
         rental.setProlonged(true);
@@ -146,20 +159,52 @@ public class ReaderService {
         return new ServiceResponse<>(Optional.of(rental), "Rental prolonged");
     }
 
-    public ServiceResponse<List<Book>> getFilteredBooks(BookFilter bookFilter){
-        if(!bookFilter.getFilter().isEmpty())
-            return new ServiceResponse<>(Optional.of(bookRepository.findByTitleStartingWithIgnoreCase(bookFilter.getFilter())),
-                    "books found by entering book title");
+    public ServiceResponse<Page<Book>> getFilteredBooks(BookFilter bookFilter) {
+        List<Book> filteredList;
 
-        List<Book> allBooks = bookRepository.findAll();
-        if(allBooks.isEmpty()) return new ServiceResponse<>(Optional.empty(), "No Books Found");
+        if (!bookFilter.getFilter().isEmpty()) {
+            filteredList = bookRepository.findByTitleStartingWithIgnoreCase(bookFilter.getFilter());
+        } else {
+            List<Book> allBooks = bookRepository.findAll();
+            filteredList = applyFilters(allBooks, bookFilter);
+        }
 
-        List<Book> filteredList = bookFilter.getAuthor()!=null ? allBooks.stream().filter(book -> book.getBookAuthor().equals(bookFilter.getAuthor())).toList(): allBooks;
-        filteredList = bookFilter.getBookCategory()!=null ? filteredList.stream().filter(book -> book.getBookCategory().toString().equals(bookFilter.getBookCategory())).toList(): filteredList;
-        filteredList = bookFilter.getBookType()!=null ? filteredList.stream().filter(book -> book.getBookType().toString().equals(bookFilter.getBookType())).toList(): filteredList;
-        filteredList = bookFilter.getMinBookRating()!=null ? filteredList.stream().filter(book -> book.getAverageBookRating() >= bookFilter.getMinBookRating() ).toList(): filteredList;
+        // Determine pagination parameters
+        int start = bookFilter.getPage() * bookFilter.getSize();
+        int end = Math.min(start + bookFilter.getSize(), filteredList.size());
+        PageRequest pageable = PageRequest.of(bookFilter.getPage(), bookFilter.getSize());
 
-        return new ServiceResponse<>(Optional.of(filteredList), "Filtered List Retrieved");
+        // Create a Page instance
+        Page<Book> pageResult = new PageImpl<>(filteredList.subList(start, end), pageable, filteredList.size());
+
+        return new ServiceResponse<>(Optional.of(pageResult), "Filtered List Retrieved");
+    }
+
+    private List<Book> applyFilters(List<Book> books, BookFilter bookFilter) {
+        List<Book> filteredList = books;
+
+        if (bookFilter.getAuthor() != null) {
+            filteredList = filteredList.stream()
+                    .filter(book -> book.getBookAuthor().equals(bookFilter.getAuthor()))
+                    .toList();
+        }
+        if (bookFilter.getBookCategory() != null) {
+            filteredList = filteredList.stream()
+                    .filter(book -> book.getBookCategory().toString().equals(bookFilter.getBookCategory()))
+                    .toList();
+        }
+        if (bookFilter.getBookType() != null) {
+            filteredList = filteredList.stream()
+                    .filter(book -> book.getBookType().toString().equals(bookFilter.getBookType()))
+                    .toList();
+        }
+        if (bookFilter.getMinBookRating() != null) {
+            filteredList = filteredList.stream()
+                    .filter(book -> book.getAverageBookRating() >= bookFilter.getMinBookRating())
+                    .toList();
+        }
+
+        return filteredList;
     }
 
     public ServiceResponse<List<NewsPost>> getNewsPostsBetweenDates(DateRange dateRange){

@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class WorkerRegistrationForm {
+    private String workerType;
     private String name;
     private String phoneNumber;
     private String email;

@@ -48,7 +48,12 @@ public class WarehouseManager implements Serializable {
 	@JoinColumn(name = "emp_man_id")
 	private EmployeeManager employedBy;
 
-	
+	public WarehouseManager(Integer monthlyPay, User user, EmployeeManager employedBy) {
+		this.monthlyPay = monthlyPay;
+		this.user = user;
+		this.employedBy = employedBy;
+	}
+
 	public String toString() {
 		return String.valueOf(getWareManId());
 	}
