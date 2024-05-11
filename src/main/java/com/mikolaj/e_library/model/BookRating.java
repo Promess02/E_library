@@ -42,5 +42,4 @@ public class BookRating implements Serializable {
 	public String toString() {
 		return String.valueOf(getBookRatingId());
 	}
-	
 }

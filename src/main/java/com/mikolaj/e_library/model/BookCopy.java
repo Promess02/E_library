@@ -66,6 +66,10 @@ public class BookCopy implements Serializable {
 	@JoinColumn(name = "worker_id")
 	private Worker addedBy;
 
+	public BookCopy(String shelfPlace) {
+		this.shelfPlace = shelfPlace;
+	}
+
 	public String toString() {
 		return String.valueOf(getCopyId());
 	}

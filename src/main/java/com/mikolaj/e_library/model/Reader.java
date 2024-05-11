@@ -48,6 +48,10 @@ public class Reader implements Serializable {
 		penalty = 0f;
 	}
 
+	public Reader(Float penalty) {
+		this.penalty = penalty;
+	}
+
 	public String toString() {
 		return String.valueOf(getReaderId());
 	}

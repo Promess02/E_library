@@ -14,6 +14,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.io.Serializable;
+import java.time.LocalDate;
 
 @Getter
 @Setter
@@ -41,7 +42,7 @@ public class Book implements Serializable {
 	@Temporal(TemporalType.DATE)
 	@JsonSerialize(using = CustomDateSerializer.class)
 	@JsonDeserialize(using = CustomDateDeserializer.class)
-	private java.util.Date releaseDate;
+	private LocalDate releaseDate;
 	
 	@Column(name="book_category", nullable=false)
 	@Convert(converter = BookCategoryConverter.class)
@@ -59,7 +60,21 @@ public class Book implements Serializable {
 	@Column(name="description")
 	private String description;
 
-	
+	public Book(BookType bookType, String title,
+				LocalDate releaseDate, BookCategory bookCategory, String bookAuthor,
+				Float averageBookRating) {
+		this.bookType = bookType;
+		this.title = title;
+		this.releaseDate = releaseDate;
+		this.bookCategory = bookCategory;
+		this.bookAuthor = bookAuthor;
+		this.averageBookRating = averageBookRating;
+	}
+
+	public Book(String title) {
+		this.title = title;
+	}
+
 	public String toString() {
 		return String.valueOf(getBookId());
 	}

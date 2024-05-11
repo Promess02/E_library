@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface RentalRepository extends JpaRepository<Rental, Integer> {
-    public Optional<List<Rental>> findAllByReader(Reader reader);
-    public Optional<List<Rental>> findAllByReaderAndStatus(Reader reader, RentalStatus rentalStatus);
+    Optional<List<Rental>> findAllByReader(Reader reader);
+    Optional<List<Rental>> findAllByReaderAndStatus(Reader reader, RentalStatus rentalStatus);
 
 }

@@ -36,12 +36,14 @@ public class NewsPost implements Serializable {
 	@Column(name="image_url")
 	private String imageUrl;
 	
-//	@Column(name="worker", nullable=false, length=10)
 	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "worker_id")
 	private Worker worker;
 
-	
+	public NewsPost(String name) {
+		this.name = name;
+	}
+
 	public String toString() {
 		return String.valueOf(getPostId());
 	}

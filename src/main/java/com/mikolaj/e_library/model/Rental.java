@@ -2,6 +2,7 @@
 package com.mikolaj.e_library.model;
 
 import java.io.Serializable;
+import java.time.LocalDate;
 import java.util.Date;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -33,13 +34,13 @@ public class Rental implements Serializable {
 	@Temporal(TemporalType.DATE)
 	@JsonSerialize(using = CustomDateSerializer.class)
 	@JsonDeserialize(using = CustomDateDeserializer.class)
-	private java.util.Date rentalDate;
+	private LocalDate rentalDate;
 	
 	@Column(name="rental_return_date", nullable=false)
 	@Temporal(TemporalType.DATE)
 	@JsonSerialize(using = CustomDateSerializer.class)
 	@JsonDeserialize(using = CustomDateDeserializer.class)
-	private java.util.Date rentalReturnDate;
+	private LocalDate rentalReturnDate;
 	
 	@Column(name="time_of_rental_in_weeks", nullable=false, length=10)
 	private int timeOfRentalInWeeks;
@@ -68,13 +69,20 @@ public class Rental implements Serializable {
 		isProlonged = false;
 		penalty = 0f;
 		status = RentalStatus.INACTIVE;
+		rentalDate = LocalDate.now();
+	}
+
+	public Rental(Float penalty, RentalStatus status, Reader reader) {
+		this.penalty = penalty;
+		this.status = status;
+		this.reader = reader;
 	}
 
 	public Rental(Reader reader, BookCopy bookCopy, int timeOfRentalInWeeks) {
 		this.reader = reader;
 		this.bookCopy = bookCopy;
 		this.timeOfRentalInWeeks = timeOfRentalInWeeks;
-		rentalDate = new Date(System.currentTimeMillis());
+		rentalDate = LocalDate.now();
 		penalty = 0f;
 		isProlonged = false;
 

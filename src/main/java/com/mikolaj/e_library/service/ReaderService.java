@@ -8,12 +8,8 @@ import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class ReaderService {
@@ -44,31 +40,24 @@ public class ReaderService {
             return new ServiceResponse<>(Optional.empty(), "Reader Not Found");
         }
         readerRepository.save(newReader);
-        return new ServiceResponse<>(Optional.of(
-                readerRepository.getById(oldReader.getReaderId())), "Updated Reader");
+        return new ServiceResponse<>(
+                readerRepository.findById(oldReader.getReaderId()), "Updated Reader");
     }
 
     public ServiceResponse<Rental> bookRental(RentalForm rentalForm){
-
         Optional<Book> book;
         Optional<Reader> reader;
 
-        if(!bookRepository.existsById(rentalForm.getBookId())){
-            return new ServiceResponse<>(Optional.empty(), "Book Not Found");
-        }else{
-            book = bookRepository.findById(rentalForm.getBookId());
-        }
+        if(!bookRepository.existsById(rentalForm.getBookId())) return new ServiceResponse<>(Optional.empty(), "Book Not Found");
+        else book = bookRepository.findById(rentalForm.getBookId());
 
-        if(!readerRepository.existsById(rentalForm.getReaderId())){
-            return new ServiceResponse<>(Optional.empty(), "Reader Not Found");
-        }else{
-            reader = readerRepository.findById(rentalForm.getReaderId());
-        }
+        if(!readerRepository.existsById(rentalForm.getReaderId())) return new ServiceResponse<>(Optional.empty(), "Reader Not Found");
+        else reader = readerRepository.findById(rentalForm.getReaderId());
+
 
         List<BookCopy> copies = bookCopyRepository.findBookCopiesByBook(book.get());
-        if(copies.isEmpty()){
-            return new ServiceResponse<>(Optional.empty(), "Book Copies Not Found");
-        }
+        if(copies.isEmpty()) return new ServiceResponse<>(Optional.empty(), "Book Copies Not Found");
+
 
         BookCopy rentedCopy = null;
         for(BookCopy copy : copies)
@@ -85,21 +74,20 @@ public class ReaderService {
         rental.setStatus(RentalStatus.ACTIVE);
         rentalRepository.save(rental);
 
-        return new ServiceResponse<>(Optional.of(rental), "rental ");
+        return new ServiceResponse<>(Optional.of(rental), "Rental saved");
     }
 
     public ServiceResponse<Rental> returnBook(Rental rental){
         if(!rentalRepository.existsById(rental.getRentalId())){
             return new ServiceResponse<>(Optional.empty(), "Rental Not Found");
         }
-        Rental rentalDb = rentalRepository.getById(rental.getRentalId());
-        rentalDb.setRentalReturnDate(new Date(System.currentTimeMillis()));
-        LocalDate start = rentalDb.getRentalDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-        LocalDate end = rentalDb.getRentalReturnDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-        int DayDiff = (int) ChronoUnit.DAYS.between(end, start);
+        Rental rentalDb = rentalRepository.findById(rental.getRentalId()).get();
+        LocalDate start = rentalDb.getRentalDate();
+        LocalDate end = LocalDate.now();
+        rentalDb.setRentalReturnDate(end);
+        int DayDiff = (int) ChronoUnit.DAYS.between(start, end);
         int DiffInWeeks = Math.floorDiv(DayDiff,7);
-        float penalty = (rentalDb.getTimeOfRentalInWeeks()-
-                DiffInWeeks)*Consts.OVERDUE_PENALTY_PER_WEEK;
+        float penalty = (DiffInWeeks - rentalDb.getTimeOfRentalInWeeks())*Consts.OVERDUE_PENALTY_PER_WEEK;
         if(DiffInWeeks>rentalDb.getTimeOfRentalInWeeks()){
             rentalDb.setPenalty(penalty);
             rentalDb.setStatus(RentalStatus.OVERDUE);
@@ -107,7 +95,6 @@ public class ReaderService {
         else {
             rentalDb.setPenalty(0f);
             rental.setStatus(RentalStatus.INACTIVE);
-
         }
         Optional<BookCopy> copyDb = bookCopyRepository.findById(rentalDb.getBookCopy().getCopyId());
         if(copyDb.isEmpty()){
@@ -123,7 +110,7 @@ public class ReaderService {
             reader.setPenalty(reader.getPenalty()+penalty);
             readerRepository.save(reader);
         }
-        return new ServiceResponse<>(Optional.of(rentalDb), "Rental ");
+        return new ServiceResponse<>(Optional.of(rentalDb), "Rental saved");
     }
 
     public ServiceResponse<List<Rental>> getAllRentalsForReader(Reader reader){
@@ -140,7 +127,6 @@ public class ReaderService {
     }
 
     public ServiceResponse<Rental> prolongateRental(ProlongateForm prolongateForm){
-
         int prolongationInWeeks = prolongateForm.getProlongationInWeeks();
         Rental rental = rentalRepository.findById(prolongateForm.getRentalId()).orElse(null);
         if(rental == null){
@@ -183,22 +169,22 @@ public class ReaderService {
     private List<Book> applyFilters(List<Book> books, BookFilter bookFilter) {
         List<Book> filteredList = books;
 
-        if (bookFilter.getAuthor() != null) {
+        if (!bookFilter.getAuthor().isEmpty()) {
             filteredList = filteredList.stream()
                     .filter(book -> book.getBookAuthor().equals(bookFilter.getAuthor()))
                     .toList();
         }
-        if (bookFilter.getBookCategory() != null) {
+        if (!bookFilter.getBookCategory().isEmpty()) {
             filteredList = filteredList.stream()
                     .filter(book -> book.getBookCategory().toString().equals(bookFilter.getBookCategory()))
                     .toList();
         }
-        if (bookFilter.getBookType() != null) {
+        if (!bookFilter.getBookType().isEmpty()) {
             filteredList = filteredList.stream()
                     .filter(book -> book.getBookType().toString().equals(bookFilter.getBookType()))
                     .toList();
         }
-        if (bookFilter.getMinBookRating() != null) {
+        if (bookFilter.getMinBookRating() != 0) {
             filteredList = filteredList.stream()
                     .filter(book -> book.getAverageBookRating() >= bookFilter.getMinBookRating())
                     .toList();
@@ -220,7 +206,7 @@ public class ReaderService {
         if(!bookRepository.existsById(bookRatingForm.getBookId())){
             return new ServiceResponse<>(Optional.empty(),"Book not found");
         }
-        if(!bookRepository.existsById(bookRatingForm.getReaderId())){
+        if(!readerRepository.existsById(bookRatingForm.getReaderId())){
             return new ServiceResponse<>(Optional.empty(),"Reader not found");
         }
         Reader reader = readerRepository.findById(bookRatingForm.getReaderId()).get();
