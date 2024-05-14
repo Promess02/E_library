@@ -9,6 +9,7 @@ import com.mikolaj.e_library.repo.BookCopyRepository;
 import com.mikolaj.e_library.repo.BookRatingRepository;
 import com.mikolaj.e_library.repo.BookRepository;
 
+import com.mikolaj.e_library.repo.ReaderRepository;
 import com.mikolaj.e_library.service.ReaderService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -26,13 +27,15 @@ public class BookController {
     private final BookRatingRepository bookRatingRepository;
     private final BookCopyRepository bookCopyRepository;
     private final ReaderService readerService;
+    private final ReaderRepository readerRepository;
 
     public BookController(BookRepository bookRepository, BookCopyRepository bookCopyRepository,
-                          ReaderService readerService, BookRatingRepository bookRatingRepository) {
+                          ReaderService readerService, BookRatingRepository bookRatingRepository, ReaderRepository readerRepository) {
         this.bookRepository = bookRepository;
         this.bookCopyRepository = bookCopyRepository;
         this.readerService = readerService;
         this.bookRatingRepository = bookRatingRepository;
+        this.readerRepository = readerRepository;
     }
 
     @GetMapping("/getAll")
@@ -102,6 +105,14 @@ public class BookController {
         return ResponseUtil.idNotFoundResponse(Book.class);
     }
 
+    /*
+    Wypożycza książkę(Book.class) o danym id dla czytelnika z danym id na podaną liczbę tygodni
+        {
+            "readerId": 2,
+            "bookId": 4,
+            "rentalInWeeks": 5
+        }
+     */
     @PostMapping("/rent")
     public ResponseEntity<?> rentBook(@RequestBody RentalForm rentalForm){
         ServiceResponse<?> response = readerService.bookRental(rentalForm);
@@ -109,6 +120,12 @@ public class BookController {
         return ResponseUtil.okResponse(response.getMessage(), "Rental", response.getData().get());
     }
 
+    /*
+    Zwraca książkę dla danego wypożyczenia. Wystarczy podać id w żądaniu
+        {
+            "rentalId": 5
+        }
+     */
     @PatchMapping("/return")
     public ResponseEntity<?> returnBook(@RequestBody Rental rental){
         ServiceResponse<?> response = readerService.returnBook(rental);
@@ -116,6 +133,12 @@ public class BookController {
         return ResponseUtil.okResponse(response.getMessage(), "Rental", response.getData().get());
     }
 
+    /*
+        Zwraca wszystkie wypożyczenia dla czytelnika. wystarczy id czytelnika
+        {
+            "readerId": 4
+        }
+     */
     @GetMapping("/getRentals")
     public ResponseEntity<?> getAllRentalsForReader(@RequestBody Reader reader){
         ServiceResponse<?> response = readerService.getAllRentalsForReader(reader);
@@ -123,6 +146,13 @@ public class BookController {
         return ResponseUtil.okResponse(response.getMessage(), "Rental", response.getData().get());
     }
 
+    /*
+        Zwraca aktywne wypożyczenia dla czytelnika
+
+        {
+            "readerId": 6
+        }
+     */
     @GetMapping("/getActiveRentals")
     public ResponseEntity<?> getActiveRentalsForReader(@RequestBody Reader reader){
         ServiceResponse<?> response = readerService.getAllActiveRentalsForReader(reader);
@@ -130,6 +160,15 @@ public class BookController {
         return ResponseUtil.okResponse(response.getMessage(), "Rental", response.getData().get());
     }
 
+    /*
+        Przedłuża wypożyczenie o podaną liczbę tygodni
+
+        {
+            "rentalId": 5,
+            "prolongationInWeeks": 6
+        }
+
+     */
     @PatchMapping("/prolongateRental")
     public ResponseEntity<?> prolongateRental(@RequestBody ProlongateForm prolongateForm){
         ServiceResponse<?> response = readerService.prolongateRental(prolongateForm);
@@ -137,6 +176,24 @@ public class BookController {
         return ResponseUtil.okResponse(response.getMessage(), "Rental", response.getData().get());
     }
 
+    /*
+        Zwraca stronę przefiltrowanych książek. W body żądania:
+        {
+            "size": 10,
+            "page": 5,
+            "filter": "Way", (opcjonalne)
+            "author": "Sanderson", (opcjonalne)
+            "bookCategory": "Fantasy", (opcjonalne)
+            "bookType": "paperback",
+            "minBookRating": 2.0
+        }
+
+        są dwa sposoby filtrowania:
+            - przez filtrowanie nazwy książki, gdzie filter w polu: "filter"
+            - przez pozostałe pola
+        W przypadku, gdy w polu "filter" jest wartość to pozostałe pola z JSONA są ignorowane,
+        nie wszystkie filtry muszą być obecne.
+     */
     @GetMapping("/getFilteredBooks")
     public ResponseEntity<?> getFilteredBooks(@RequestBody BookFilter bookFilter){
         ServiceResponse<Page<Book>> response = readerService.getFilteredBooks(bookFilter);
@@ -145,14 +202,29 @@ public class BookController {
         return ResponseUtil.okResponse(response.getMessage(), "Books", bookPage.get());
     }
 
-    // dodaje rating użytkownika do książki, jeśli już był wystawiony rating to zmienia go
+    /* dodaje rating użytkownika do książki, jeśli już był wystawiony rating to zmienia go.
+           {
+            "rating": 4,
+            "bookId": 3,
+            "readerId": 4
+           }
+     */
     @PostMapping("/addOrUpdateBookRating")
     public ResponseEntity<?> addOrUpdateBookRating(@RequestBody BookRatingForm bookRatingForm){
         ServiceResponse<?> response = readerService.addOrUpdateBookRating(bookRatingForm);
         if(response.getData().isEmpty()) return ResponseUtil.badRequestResponse(response.getMessage());
         return ResponseUtil.okResponse(response.getMessage(), "Rating", response.getData().get());
     }
+    /* zwraca wszystkie wiadomości dla czytelnika z danego zakresu dat. Ciało może być puste i wtedy
+        zwróci wszystkie wiadomości.
+        {
+            "startDate": "yyyy-mm-dd",
+            "endDate": "yyyy-mm-dd"
+        }
 
+        UWAGA: nie testowałem czy rzeczywiście dobrze konwertuje tak podaną datę w ciele żądania,
+        ale prawdopodobnie jeszcze nie :(
+     */
     @GetMapping("/getNewsPosts")
     public ResponseEntity<?> getAllNewsPosts(@RequestBody DateRange dateRange){
         ServiceResponse<?> response = readerService.getNewsPostsBetweenDates(dateRange);
@@ -160,9 +232,24 @@ public class BookController {
         return ResponseUtil.okResponse(response.getMessage(), "Posts", response.getData().get());
     }
 
+    /*
+        zwraca rating dla danej książki i czytelnika
+        {
+            "bookId": 4,
+            "readerId": 5
+        }
+     */
     @GetMapping("/getRatingForBook")
-    public ResponseEntity<?> getRatingForBook(@RequestBody BookRating bookRating){
-        Optional<BookRating> bookRatingDb = bookRatingRepository.findByBookAndReader(bookRating.getBook(), bookRating.getReader());
+    public ResponseEntity<?> getRatingForBook(@RequestBody BookRatingForm bookRatingForm){
+        Book book;
+        Reader reader;
+        if(bookRepository.existsById(bookRatingForm.getBookId())) book =
+                bookRepository.findById(bookRatingForm.getBookId()).get();
+        else return ResponseUtil.badRequestResponse("no book found");
+        if(readerRepository.existsById(bookRatingForm.getReaderId())) reader =
+                readerRepository.findById(bookRatingForm.getReaderId()).get();
+        else return ResponseUtil.badRequestResponse("no reader found");
+        Optional<BookRating> bookRatingDb = bookRatingRepository.findByBookAndReader(book,reader);
         return bookRatingDb.map(rating -> ResponseUtil.okResponse("book rating found", "Book rating", rating))
                 .orElseGet(() -> ResponseUtil.badRequestResponse("No rating present"));
     }

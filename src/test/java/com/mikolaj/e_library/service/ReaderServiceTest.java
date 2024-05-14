@@ -149,11 +149,15 @@ public class ReaderServiceTest {
         // Create mock data
         RentalForm rentalForm = new RentalForm(1, 1, 2); // Assuming book ID: 1, reader ID: 1, rental in weeks: 2
         // Mock repository method to return false indicating book not found
-        when(readerRepository.existsById(rentalForm.getReaderId())).thenReturn(false);
+        when(bookRepository.existsById(any())).thenReturn(true);
+        when(bookRepository.findById(any())).thenReturn(Optional.of(new Book()));
+        when(readerRepository.existsById(any())).thenReturn(false);
         // Call the service method
         ServiceResponse<Rental> response = readerService.bookRental(rentalForm);
         // Verify repository method call
         verify(readerRepository).existsById(rentalForm.getReaderId());
+        verify(bookRepository).existsById(any());
+        verify(bookRepository).findById(any());
         // Check response
         assertEquals("Reader Not Found", response.getMessage());
         assertEquals(Optional.empty(), response.getData());
