@@ -126,6 +126,31 @@ public class ReaderServiceTest {
         assertEquals(15f, response.getData().get().getReader().getPenalty());
         assertEquals("4F", response.getData().get().getBookCopy().getShelfPlace());
         assertEquals(RentalStatus.ACTIVE, response.getData().get().getStatus());
+    }
+
+    @Test
+    public void testBookRental_NoFreeCopiesFound(){
+        RentalForm rentalForm = new RentalForm(1, 1, 2); // Assuming book ID: 1, reader ID: 1, rental in weeks: 2
+        Book book = new Book("Way of Kings");
+        Reader reader = new Reader(15f);
+        BookCopy rentedCopy = new BookCopy("4F");
+        rentedCopy.setRentalStatus(RentalStatus.RENTED);
+        List<BookCopy> copies = new ArrayList<>();
+        copies.add(rentedCopy);
+        Rental rental = new Rental(reader, rentedCopy, rentalForm.getRentalInWeeks());
+        rental.setStatus(RentalStatus.ACTIVE);
+
+        // Mock repository methods
+        when(bookRepository.existsById(rentalForm.getBookId())).thenReturn(true);
+        when(bookRepository.findById(rentalForm.getBookId())).thenReturn(Optional.of(book));
+        when(readerRepository.existsById(rentalForm.getReaderId())).thenReturn(true);
+        when(readerRepository.findById(rentalForm.getReaderId())).thenReturn(Optional.of(reader));
+        when(bookCopyRepository.findBookCopiesByBook(book)).thenReturn(copies);
+
+        ServiceResponse<Rental> response = readerService.bookRental(rentalForm);
+
+        assertEquals("No free copies found!", response.getMessage());
+        assertEquals(Optional.empty(), response.getData());
 
     }
 

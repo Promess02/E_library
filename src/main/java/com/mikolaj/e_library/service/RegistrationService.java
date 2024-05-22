@@ -141,5 +141,4 @@ public class RegistrationService {
             return new ServiceResponse<>(Optional.empty(), "Wrong password");
         return new ServiceResponse<>(warehouseManager, "Warehouse Manager logged in");
     }
-
 }
