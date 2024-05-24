@@ -77,42 +77,6 @@ public class ReaderService {
         return new ServiceResponse<>(Optional.of(rental), "Rental saved");
     }
 
-    public ServiceResponse<Rental> returnBook(Rental rental){
-        if(!rentalRepository.existsById(rental.getRentalId())){
-            return new ServiceResponse<>(Optional.empty(), "Rental Not Found");
-        }
-        Rental rentalDb = rentalRepository.findById(rental.getRentalId()).get();
-        LocalDate start = rentalDb.getRentalDate();
-        LocalDate end = LocalDate.now();
-        rentalDb.setRentalReturnDate(end);
-        int DayDiff = (int) ChronoUnit.DAYS.between(start, end);
-        int DiffInWeeks = Math.floorDiv(DayDiff,7);
-        float penalty = (DiffInWeeks - rentalDb.getTimeOfRentalInWeeks())*Consts.OVERDUE_PENALTY_PER_WEEK;
-        if(DiffInWeeks>rentalDb.getTimeOfRentalInWeeks()){
-            rentalDb.setPenalty(penalty);
-            rentalDb.setStatus(RentalStatus.OVERDUE);
-        }
-        else {
-            rentalDb.setPenalty(0f);
-            rental.setStatus(RentalStatus.INACTIVE);
-        }
-        Optional<BookCopy> copyDb = bookCopyRepository.findById(rentalDb.getBookCopy().getCopyId());
-        if(copyDb.isEmpty()){
-            return new ServiceResponse<>(Optional.empty(), "Book Copy Not Found");
-        }
-        BookCopy copy = copyDb.get();
-        copy.setRentalStatus(RentalStatus.FREE);
-        bookCopyRepository.save(copy);
-        rentalRepository.save(rentalDb);
-
-        if(penalty>0){
-            Reader reader = rentalDb.getReader();
-            reader.setPenalty(reader.getPenalty()+penalty);
-            readerRepository.save(reader);
-        }
-        return new ServiceResponse<>(Optional.of(rentalDb), "Rental saved");
-    }
-
     public ServiceResponse<List<Rental>> getAllRentalsForReader(Reader reader){
         Optional<List<Rental>> list = rentalRepository.findAllByReader(reader);
         if(list.isEmpty()) return new ServiceResponse<>(Optional.empty(), "No Rental Found");

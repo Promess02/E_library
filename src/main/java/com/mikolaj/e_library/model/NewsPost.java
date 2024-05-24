@@ -42,6 +42,14 @@ public class NewsPost implements Serializable {
 
 	public NewsPost(String name) {
 		this.name = name;
+		this.createTime = LocalDateTime.now();
+	}
+
+	public NewsPost(String name, String contents, String imageUrl, Worker worker) {
+		this.name = name;
+		this.contents = contents;
+		this.imageUrl = imageUrl;
+		this.worker = worker;
 	}
 
 	public String toString() {

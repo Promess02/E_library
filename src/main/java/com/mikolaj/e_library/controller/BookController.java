@@ -11,6 +11,7 @@ import com.mikolaj.e_library.repo.BookRepository;
 
 import com.mikolaj.e_library.repo.ReaderRepository;
 import com.mikolaj.e_library.service.ReaderService;
+import com.mikolaj.e_library.service.WorkerService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -25,17 +26,17 @@ import java.util.Optional;
 public class BookController {
     private final BookRepository bookRepository;
     private final BookRatingRepository bookRatingRepository;
-    private final BookCopyRepository bookCopyRepository;
     private final ReaderService readerService;
     private final ReaderRepository readerRepository;
+    private final WorkerService workerService;
 
-    public BookController(BookRepository bookRepository, BookCopyRepository bookCopyRepository,
-                          ReaderService readerService, BookRatingRepository bookRatingRepository, ReaderRepository readerRepository) {
+    public BookController(BookRepository bookRepository, ReaderService readerService, BookRatingRepository bookRatingRepository,
+                          ReaderRepository readerRepository, WorkerService workerService) {
         this.bookRepository = bookRepository;
-        this.bookCopyRepository = bookCopyRepository;
         this.readerService = readerService;
         this.bookRatingRepository = bookRatingRepository;
         this.readerRepository = readerRepository;
+        this.workerService = workerService;
     }
 
     @GetMapping("/getAll")
@@ -120,18 +121,6 @@ public class BookController {
         return ResponseUtil.okResponse(response.getMessage(), "Rental", response.getData().get());
     }
 
-    /*
-    Zwraca książkę dla danego wypożyczenia. Wystarczy podać id w żądaniu
-        {
-            "rentalId": 5
-        }
-     */
-    @PatchMapping("/return")
-    public ResponseEntity<?> returnBook(@RequestBody Rental rental){
-        ServiceResponse<?> response = readerService.returnBook(rental);
-        if(response.getData().isEmpty()) return ResponseUtil.badRequestResponse(response.getMessage());
-        return ResponseUtil.okResponse(response.getMessage(), "Rental", response.getData().get());
-    }
 
     /*
         Zwraca wszystkie wypożyczenia dla czytelnika. wystarczy id czytelnika

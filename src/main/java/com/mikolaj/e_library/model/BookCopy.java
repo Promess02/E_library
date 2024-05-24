@@ -70,6 +70,10 @@ public class BookCopy implements Serializable {
 		this.shelfPlace = shelfPlace;
 	}
 
+	public BookCopy(Book book){
+		this.book = book;
+	}
+
 	public String toString() {
 		return String.valueOf(getCopyId());
 	}
