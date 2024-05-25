@@ -42,7 +42,17 @@ public class WarehouseManager implements Serializable {
 	@OneToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "Id")
 	private User user;
-	
+
+	@Column(name = "pesel", nullable = false)
+	private String PESEL;
+
+	@Column(name = "pay_account_number", nullable = false)
+	private String payAccountNumber;
+
+	@Column(name = "address")
+	private String address;
+
+
 //	@Column(name="employedBy", nullable=false, length=10)
 	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "emp_man_id")
@@ -52,6 +62,16 @@ public class WarehouseManager implements Serializable {
 		this.monthlyPay = monthlyPay;
 		this.user = user;
 		this.employedBy = employedBy;
+	}
+
+	public WarehouseManager(Integer monthlyPay, User user, EmployeeManager employedBy,
+							String PESEL, String payAccountNumber, String address) {
+		this.monthlyPay = monthlyPay;
+		this.user = user;
+		this.employedBy = employedBy;
+		this.PESEL = PESEL;
+		this.payAccountNumber = payAccountNumber;
+		this.address = address;
 	}
 
 	public String toString() {

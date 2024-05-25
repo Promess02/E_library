@@ -29,9 +29,27 @@ public class EmployeeManager implements Serializable {
 	@JoinColumn(name = "Id")
 	private User user;
 
+	@Column(name = "pesel", nullable = false)
+	private String PESEL;
+
+	@Column(name = "pay_account_number", nullable = false)
+	private String payAccountNumber;
+
+	@Column(name = "address")
+	private String address;
+
 	public EmployeeManager(Integer monthlyPay, User user) {
 		this.monthlyPay = monthlyPay;
 		this.user = user;
+	}
+
+	public EmployeeManager(Integer monthlyPay, User user,
+						   String PESEL, String payAccountNumber, String address) {
+		this.monthlyPay = monthlyPay;
+		this.user = user;
+		this.PESEL = PESEL;
+		this.payAccountNumber = payAccountNumber;
+		this.address = address;
 	}
 
 	public String toString() {

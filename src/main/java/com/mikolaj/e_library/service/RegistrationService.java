@@ -5,9 +5,7 @@ import com.mikolaj.e_library.DTO.ServiceResponse;
 import com.mikolaj.e_library.DTO.WorkerRegistrationForm;
 import com.mikolaj.e_library.model.*;
 import com.mikolaj.e_library.repo.*;
-import org.hibernate.jdbc.Work;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.Optional;
 
@@ -57,7 +55,7 @@ public class RegistrationService {
         if(userRepository.existsById(workerRegistrationForm.getUserId())){
             User user = userRepository.findById(workerRegistrationForm.getUserId()).orElse(null);
             Worker worker = new Worker(workerRegistrationForm.getMonthlyPay(),
-                    user, employeeManager);
+                    user, employeeManager, workerRegistrationForm.getPESEL(), workerRegistrationForm.getPayAccountNumber(),workerRegistrationForm.getAddress());
             workerRepository.save(worker);
             return new ServiceResponse<>(Optional.of(worker), "Worker saved with existing user");
         }
@@ -65,7 +63,8 @@ public class RegistrationService {
                 workerRegistrationForm.getEmail(), workerRegistrationForm.getPhoneNumber(),
                 workerRegistrationForm.getPassword());
         userRepository.save(user);
-        Worker worker = new Worker(workerRegistrationForm.getMonthlyPay(), user, employeeManager);
+        Worker worker = new Worker(workerRegistrationForm.getMonthlyPay(), user, employeeManager,
+                workerRegistrationForm.getPESEL(), workerRegistrationForm.getPayAccountNumber(),workerRegistrationForm.getAddress());
         workerRepository.save(worker);
         return new ServiceResponse<>(Optional.of(worker), "Worker saved with created user");
     }
@@ -78,7 +77,8 @@ public class RegistrationService {
         if(userRepository.existsById(workerRegistrationForm.getUserId())){
             User user = userRepository.findById(workerRegistrationForm.getUserId()).orElse(null);
             WarehouseManager warehouseManager = new WarehouseManager(workerRegistrationForm.getMonthlyPay(),
-                    user, employeeManager);
+                    user, employeeManager, workerRegistrationForm.getPESEL(),workerRegistrationForm.getPayAccountNumber(),
+                    workerRegistrationForm.getAddress());
             warehouseManagerRepository.save(warehouseManager);
             return new ServiceResponse<>(Optional.of(warehouseManager), "Warehouse manager saved with existing user");
         }
@@ -87,7 +87,8 @@ public class RegistrationService {
                 workerRegistrationForm.getPassword());
         userRepository.save(user);
         WarehouseManager warehouseManager = new WarehouseManager(workerRegistrationForm.getMonthlyPay(),
-                user, employeeManager);
+                user, employeeManager, workerRegistrationForm.getPESEL(),workerRegistrationForm.getPayAccountNumber(),
+                workerRegistrationForm.getAddress());
         warehouseManagerRepository.save(warehouseManager);
         return new ServiceResponse<>(Optional.of(warehouseManager), "WarehouseManager saved with created user");
     }

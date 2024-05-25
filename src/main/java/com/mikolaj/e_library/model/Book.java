@@ -71,6 +71,16 @@ public class Book implements Serializable {
 		this.averageBookRating = averageBookRating;
 	}
 
+	public Book(BookType bookType, String title, LocalDate releaseDate, BookCategory bookCategory, String imageUrl, String description, String bookAuthor) {
+		this.bookType = bookType;
+		this.title = title;
+		this.releaseDate = releaseDate;
+		this.bookCategory = bookCategory;
+		this.imageUrl = imageUrl;
+		this.description = description;
+		this.bookAuthor = bookAuthor;
+	}
+
 	public Book(String title) {
 		this.title = title;
 	}

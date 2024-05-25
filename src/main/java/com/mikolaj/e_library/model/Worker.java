@@ -36,8 +36,17 @@ public class Worker implements Serializable {
 	private int workerId;
 	
 	@Column(name="monthly_pay", nullable=true, length=10)
-	private Integer monthlyPay;
-	
+	private int monthlyPay;
+
+	@Column(name = "pesel", nullable = false)
+	private String PESEL;
+
+	@Column(name = "pay_account_number", nullable = false)
+	private String payAccountNumber;
+
+	@Column(name = "address")
+	private String address;
+
 	@OneToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "Id")
 	private User user;
@@ -48,6 +57,15 @@ public class Worker implements Serializable {
 
 	public Worker(Integer monthlyPay, User user, EmployeeManager employedBy) {
 		this.monthlyPay = monthlyPay;
+		this.user = user;
+		this.employedBy = employedBy;
+	}
+
+	public Worker(int monthlyPay, User user, EmployeeManager employedBy, String PESEL, String payAccountNumber, String address) {
+		this.monthlyPay = monthlyPay;
+		this.PESEL = PESEL;
+		this.payAccountNumber = payAccountNumber;
+		this.address = address;
 		this.user = user;
 		this.employedBy = employedBy;
 	}
