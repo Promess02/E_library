@@ -1,14 +1,17 @@
 
 package com.mikolaj.e_library.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.mikolaj.e_library.DTO.BookCategory;
+import com.mikolaj.e_library.DTO.BookCategorySerializer;
 import com.mikolaj.e_library.DTO.BookType;
+import com.mikolaj.e_library.DTO.BookTypeSerializer;
 import com.mikolaj.e_library.Persistence.BookCategoryConverter;
 import com.mikolaj.e_library.Persistence.BookTypeConverter;
-import com.mikolaj.e_library.Persistence.CustomDateDeserializer;
-import com.mikolaj.e_library.Persistence.CustomDateSerializer;
+import com.mikolaj.e_library.DTO.CustomDateDeserializer;
+import com.mikolaj.e_library.DTO.CustomDateSerializer;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -33,19 +36,21 @@ public class Book implements Serializable {
 	
 	@Column(name="book_type", nullable=false)
 	@Convert(converter = BookTypeConverter.class)
+	@JsonSerialize(using = BookTypeSerializer.class)
 	private BookType bookType;
 	
 	@Column(name="title", nullable=false)
 	private String title;
 	
 	@Column(name="release_date", nullable=false)
-	@Temporal(TemporalType.DATE)
+	@JsonFormat(pattern = "yyyy-MM-dd")
 	@JsonSerialize(using = CustomDateSerializer.class)
 	@JsonDeserialize(using = CustomDateDeserializer.class)
 	private LocalDate releaseDate;
 	
 	@Column(name="book_category", nullable=false)
 	@Convert(converter = BookCategoryConverter.class)
+	@JsonSerialize(using = BookCategorySerializer.class)
 	private BookCategory bookCategory;
 	
 	@Column(name="Average_book_rating", length=10)
@@ -79,6 +84,7 @@ public class Book implements Serializable {
 		this.imageUrl = imageUrl;
 		this.description = description;
 		this.bookAuthor = bookAuthor;
+		this.averageBookRating = 0f;
 	}
 
 	public Book(String title) {

@@ -87,7 +87,7 @@ public class BookController {
      */
     @PostMapping("/save")
     public ResponseEntity<?> saveBook(@RequestBody Book book){
-        ServiceResponse<?> response = new ServiceResponse<Object>(Optional.of(bookRepository.save(book)),"book saved");
+        ServiceResponse<Book> response = new ServiceResponse<>(Optional.of(bookRepository.save(book)),"book saved");
         if(response.getData().isEmpty()) return ResponseUtil.badRequestResponse("couldn't save book");
         return ResponseUtil.okResponse(response.getMessage(), "Book", response.getData().get());
     }

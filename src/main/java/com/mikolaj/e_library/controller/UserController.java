@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 
 @RestController
-@RequestMapping("/book")
+@RequestMapping("/user")
 @CrossOrigin(origins = "http://localhost:3000") // Add @CrossOrigin annotation to enable CORS for this method
 public class UserController {
     private final RegistrationService registrationService;
@@ -24,10 +24,10 @@ public class UserController {
     /*Rejestruje czytelnika
 
         {
-            "name": "Mikolaj"
-		    "surname": "Michalczyk"
-		    "email": "miko@wp.pl"
-            "phoneNumber": "243512"
+            "name": "Mikolaj",
+		    "surname": "Michalczyk",
+		    "email": "miko@wp.pl",
+            "phoneNumber": "243512",
             "password": "tajne_haslo"
         }
      */
@@ -41,10 +41,10 @@ public class UserController {
     /*Rejestruje uzytkownika
 
     {
-        "name": "Mikolaj"
-        "surname": "Michalczyk"
-        "email": "miko@wp.pl"
-        "phoneNumber": "243512"
+        "name": "Mikolaj",
+        "surname": "Michalczyk",
+        "email": "miko@wp.pl",
+        "phoneNumber": "243512",
         "password": "tajne_haslo"
     }
  */
@@ -61,15 +61,16 @@ public class UserController {
     zwróci odpowiedź badRequest. Można stworzyć pracownika poprzez podanie nowych informacji albo id istniejącego
     użytkownika. Żądanie:
 
+    Nie działa coś te HTTP XD
     {
         "workerType": "worker",
         "name": "mikolaj",
         "phoneNumber": "24421124",
-        "email": "miko@wp.pl"
+        "email": "miko@wp.pl",
         "password": "nowe_haslo",
-        "surname": "tajne_haslo"
-        "userId": 4
-        "employerId": 2
+        "surname": "tajne_haslo",
+        "userId": 4,
+        "employerId": 2,
         "monthlyPay": 2345
     }
      */

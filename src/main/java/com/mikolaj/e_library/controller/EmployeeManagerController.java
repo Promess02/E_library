@@ -38,6 +38,11 @@ public class EmployeeManagerController {
         return ResponseUtil.okResponse(response.getMessage(), "WarehouseManagers", response.getData().get());
     }
 
+    /*
+        {
+            
+        }
+     */
     @PutMapping("/updateWorker")
     public ResponseEntity<?> updateWorker(@RequestBody Worker worker) {
         ServiceResponse<Worker> response = employeeManagerService.updateWorker(worker);
