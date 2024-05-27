@@ -24,6 +24,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.io.Serializable;
+import java.time.LocalDate;
 
 @Getter
 @Entity
@@ -48,10 +49,7 @@ public class BookCopy implements Serializable {
 	private String shelfPlace;
 	
 	@Column(name="date_of_purchase", nullable=false)
-	@Temporal(TemporalType.DATE)
-	@JsonSerialize(using = CustomDateSerializer.class)
-	@JsonDeserialize(using = CustomDateDeserializer.class)
-	private java.util.Date dateOfPurchase;
+	private LocalDate dateOfPurchase;
 	
 	@Column(name="quality_status", nullable=false)
 	private String qualityStatus;

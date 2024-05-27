@@ -19,7 +19,7 @@ public class WarehouseManagerController {
     }
 
     @PostMapping("/addBook")
-    public ResponseEntity<?> addBook(Book book) {
+    public ResponseEntity<?> addBook(@RequestBody Book book) {
         ServiceResponse<Book> serviceResponse = warehouseManagerService.addBook(book);
         if(serviceResponse.getData().isEmpty()) return ResponseUtil.badRequestResponse(serviceResponse.getMessage());
         return ResponseUtil.okResponse(serviceResponse.getMessage(),"Book", serviceResponse.getData().get());

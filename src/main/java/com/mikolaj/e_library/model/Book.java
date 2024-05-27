@@ -34,7 +34,7 @@ public class Book implements Serializable {
 	//@org.hibernate.annotations.GenericGenerator(name="COM_MIKOLAJ_BOOK_BOOKID_GENERATOR", strategy="identity")
 	private int bookId;
 	
-	@Column(name="book_type", nullable=false)
+	@Column(name="book_type")
 	@Convert(converter = BookTypeConverter.class)
 	@JsonSerialize(using = BookTypeSerializer.class)
 	private BookType bookType;
@@ -42,13 +42,13 @@ public class Book implements Serializable {
 	@Column(name="title", nullable=false)
 	private String title;
 	
-	@Column(name="release_date", nullable=false)
+	@Column(name="release_date")
 	@JsonFormat(pattern = "yyyy-MM-dd")
 	@JsonSerialize(using = CustomDateSerializer.class)
 	@JsonDeserialize(using = CustomDateDeserializer.class)
 	private LocalDate releaseDate;
 	
-	@Column(name="book_category", nullable=false)
+	@Column(name="book_category")
 	@Convert(converter = BookCategoryConverter.class)
 	@JsonSerialize(using = BookCategorySerializer.class)
 	private BookCategory bookCategory;
@@ -59,7 +59,7 @@ public class Book implements Serializable {
 	@Column(name="image_url")
 	private String imageUrl;
 	
-	@Column(name="book_author", nullable=false)
+	@Column(name="book_author")
 	private String bookAuthor;
 	
 	@Column(name="description")
