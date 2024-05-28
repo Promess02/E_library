@@ -49,10 +49,10 @@ public class BookCopy implements Serializable {
 	private String shelfPlace;
 	
 	@Column(name="date_of_purchase", nullable=false)
-	private LocalDate dateOfPurchase;
+	private LocalDate dateOfPurchase = LocalDate.now();
 	
 	@Column(name="quality_status", nullable=false)
-	private String qualityStatus;
+	private String qualityStatus = "New";
 	
 //	@Column(name="book", nullable=false, length=10)
 	@ManyToOne(fetch = FetchType.EAGER, optional = false)
@@ -61,8 +61,8 @@ public class BookCopy implements Serializable {
 	
 //	@Column(name="addedBy", nullable=false, length=10)
 	@ManyToOne(fetch = FetchType.EAGER)
-	@JoinColumn(name = "worker_id")
-	private Worker addedBy;
+	@JoinColumn(name = "ware_man_id")
+	private WarehouseManager addedBy;
 
 	public BookCopy(String shelfPlace) {
 		this.shelfPlace = shelfPlace;
@@ -72,6 +72,11 @@ public class BookCopy implements Serializable {
 		this.book = book;
 	}
 
+	public BookCopy(String shelfPlace, Book book, WarehouseManager manager){
+		this.shelfPlace = shelfPlace;
+		this.book = book;
+		this.addedBy = manager;
+	}
 	public String toString() {
 		return String.valueOf(getCopyId());
 	}

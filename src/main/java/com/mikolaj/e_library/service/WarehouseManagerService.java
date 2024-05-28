@@ -1,8 +1,11 @@
 package com.mikolaj.e_library.service;
 
+import com.mikolaj.e_library.DTO.CopiesForm;
 import com.mikolaj.e_library.DTO.ServiceResponse;
 import com.mikolaj.e_library.model.Book;
 import com.mikolaj.e_library.model.BookCopy;
+import com.mikolaj.e_library.model.WarehouseManager;
+import com.mikolaj.e_library.model.Worker;
 import com.mikolaj.e_library.repo.BookCopyRepository;
 import com.mikolaj.e_library.repo.BookRepository;
 import com.mikolaj.e_library.repo.WarehouseManagerRepository;
@@ -57,19 +60,35 @@ public class WarehouseManagerService {
         }
     }
 
-    public ServiceResponse<BookCopy> addBookCopy(BookCopy bookCopy) {
+    public ServiceResponse<BookCopy> addBookCopy(CopiesForm copiesForm, int numberOfCopies) {
         try {
-            BookCopy savedBookCopy = bookCopyRepository.save(bookCopy);
-            return new ServiceResponse<>(Optional.of(savedBookCopy), "Book copy added successfully");
+            BookCopy bookCopy = new BookCopy();
+            Optional<Book> book = bookRepository.findById(copiesForm.getBookId());
+            if(book.isEmpty()) return new ServiceResponse<>(Optional.empty(), "Book not found");
+            bookCopy.setBook(book.get());
+            bookCopy.setShelfPlace(copiesForm.getShelfPlace());
+            if(copiesForm.getWorkerId()!=0){
+                Optional<WarehouseManager> warehouseManager =
+                        warehouseManagerRepository.findById(copiesForm.getWorkerId());
+                if(warehouseManager.isEmpty()) return new ServiceResponse<>(Optional.empty(), "Worker not found");
+                bookCopy.setAddedBy(warehouseManager.get());
+            }
+            int iterationTimes = numberOfCopies>0?numberOfCopies:1;
+            for(int i=0; i<iterationTimes;i++)
+            bookCopyRepository.save(bookCopy);
+            return new ServiceResponse<>(Optional.of(bookCopy), "Book copies added successfully");
         } catch (Exception e) {
             return new ServiceResponse<>(Optional.empty(), "Error adding book copy: " + e.getMessage());
         }
     }
 
-    public ServiceResponse<BookCopy> updateBookCopy(BookCopy bookCopy) {
-        if (bookCopyRepository.existsById(bookCopy.getCopyId())) {
+    public ServiceResponse<BookCopy> updateBookCopy(CopiesForm copiesForm) {
+        if (bookCopyRepository.existsById(copiesForm.getCopyId())){
             try {
-                BookCopy updatedBookCopy = bookCopyRepository.save(bookCopy);
+                ServiceResponse<BookCopy> response = createBookCopy(copiesForm);
+                if(response.getData().isEmpty()) return response;
+                BookCopy updatedBookCopy = response.getData().get();
+                bookCopyRepository.save(updatedBookCopy);
                 return new ServiceResponse<>(Optional.of(updatedBookCopy), "Book copy updated successfully");
             } catch (Exception e) {
                 return new ServiceResponse<>(Optional.empty(), "Error updating book copy: " + e.getMessage());
@@ -77,6 +96,21 @@ public class WarehouseManagerService {
         } else {
             return new ServiceResponse<>(Optional.empty(), "Book copy not found");
         }
+    }
+
+    private ServiceResponse<BookCopy> createBookCopy(CopiesForm copiesForm){
+        BookCopy bookCopy = new BookCopy();
+        Optional<Book> book = bookRepository.findById(copiesForm.getBookId());
+        if(book.isEmpty()) return new ServiceResponse<>(Optional.empty(), "Book not found");
+        bookCopy.setBook(book.get());
+        bookCopy.setShelfPlace(copiesForm.getShelfPlace());
+        if(copiesForm.getWorkerId()!=0){
+            Optional<WarehouseManager> warehouseManager =
+                    warehouseManagerRepository.findById(copiesForm.getWorkerId());
+            if(warehouseManager.isEmpty()) return new ServiceResponse<>(Optional.empty(), "Worker not found");
+            bookCopy.setAddedBy(warehouseManager.get());
+        }
+        return new ServiceResponse<>(Optional.of(bookCopy), "ok");
     }
 
     public ServiceResponse<BookCopy> deleteBookCopy(BookCopy bookCopy) {

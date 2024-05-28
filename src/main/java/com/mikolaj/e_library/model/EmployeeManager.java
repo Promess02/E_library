@@ -30,7 +30,7 @@ public class EmployeeManager implements Serializable {
 	private User user;
 
 	@Column(name = "pesel", nullable = false)
-	private String PESEL;
+	private String pesel;
 
 	@Column(name = "pay_account_number", nullable = false)
 	private String payAccountNumber;
@@ -41,16 +41,21 @@ public class EmployeeManager implements Serializable {
 	public EmployeeManager(Integer monthlyPay, User user) {
 		this.monthlyPay = monthlyPay;
 		this.user = user;
+		this.pesel = pesel;
+		this.payAccountNumber = payAccountNumber;
+		this.address = address;
 	}
 
 	public EmployeeManager(Integer monthlyPay, User user,
 						   String PESEL, String payAccountNumber, String address) {
 		this.monthlyPay = monthlyPay;
 		this.user = user;
-		this.PESEL = PESEL;
+		this.pesel = PESEL;
 		this.payAccountNumber = payAccountNumber;
 		this.address = address;
 	}
+
+
 
 	public String toString() {
 		return String.valueOf(getEmpManId());

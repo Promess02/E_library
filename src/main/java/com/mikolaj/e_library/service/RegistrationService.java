@@ -47,66 +47,87 @@ public class RegistrationService {
         return new ServiceResponse<>(Optional.of(user), "new reader registered");
     }
 
-    public ServiceResponse<Worker> registerWorker(WorkerRegistrationForm workerRegistrationForm) {
-        if(!employeeManagerRepository.existsById(workerRegistrationForm.getEmployerId())){
-            return new ServiceResponse<>(Optional.empty(), "Employer manager doesn't exist");
-        }
-        EmployeeManager employeeManager = employeeManagerRepository.findById(workerRegistrationForm.getEmployerId()).orElse(null);
-        if(userRepository.existsById(workerRegistrationForm.getUserId())){
-            User user = userRepository.findById(workerRegistrationForm.getUserId()).orElse(null);
-            Worker worker = new Worker(workerRegistrationForm.getMonthlyPay(),
-                    user, employeeManager, workerRegistrationForm.getPESEL(), workerRegistrationForm.getPayAccountNumber(),workerRegistrationForm.getAddress());
+    public ServiceResponse<Object> registerWorker(WorkerRegistrationForm form) {
+        ServiceResponse<Object> check = checkGivenEmployer(form.getEmployerId());
+        if(!check.getMessage().equalsIgnoreCase("OK")) return check;
+        EmployeeManager employeeManager = employeeManagerRepository.findById(form.getEmployerId()).orElse(null);
+        if(userRepository.existsById(form.getUserId())){
+            if(employeeManagerRepository.existsByUserId(form.getUserId()))
+                return new ServiceResponse<>(Optional.empty(), "User with given id is an employee manager");
+            if(warehouseManagerRepository.existsByUserId(form.getUserId()))
+                return new ServiceResponse<>(Optional.empty(), "User with given id is a warehouse manager");
+            User user = userRepository.findById(form.getUserId()).orElse(null);
+            Worker worker = new Worker(form.getMonthlyPay(),
+                    user, employeeManager, form.getPesel(), form.getPayAccountNumber(),form.getAddress());
             workerRepository.save(worker);
             return new ServiceResponse<>(Optional.of(worker), "Worker saved with existing user");
         }
-        User user = new User(workerRegistrationForm.getName(), workerRegistrationForm.getSurname(),
-                workerRegistrationForm.getEmail(), workerRegistrationForm.getPhoneNumber(),
-                workerRegistrationForm.getPassword());
+        if(userRepository.existsByEmail(form.getEmail())) {
+            return new ServiceResponse<>(Optional.empty(), "User with that email already exists");
+        }
+        User user = new User(form.getName(), form.getSurname(),
+                form.getEmail(), form.getPhoneNumber(),
+                form.getPassword());
         userRepository.save(user);
-        Worker worker = new Worker(workerRegistrationForm.getMonthlyPay(), user, employeeManager,
-                workerRegistrationForm.getPESEL(), workerRegistrationForm.getPayAccountNumber(),workerRegistrationForm.getAddress());
+        Worker worker = new Worker(form.getMonthlyPay(), user, employeeManager,
+                form.getPesel(), form.getPayAccountNumber(),form.getAddress());
         workerRepository.save(worker);
         return new ServiceResponse<>(Optional.of(worker), "Worker saved with created user");
     }
 
-    public ServiceResponse<WarehouseManager> registerWarehouseManager(WorkerRegistrationForm workerRegistrationForm) {
-        if(!employeeManagerRepository.existsById(workerRegistrationForm.getEmployerId())){
-            return new ServiceResponse<>(Optional.empty(), "Employer manager doesn't exist");
-        }
-        EmployeeManager employeeManager = employeeManagerRepository.findById(workerRegistrationForm.getEmployerId()).orElse(null);
-        if(userRepository.existsById(workerRegistrationForm.getUserId())){
-            User user = userRepository.findById(workerRegistrationForm.getUserId()).orElse(null);
-            WarehouseManager warehouseManager = new WarehouseManager(workerRegistrationForm.getMonthlyPay(),
-                    user, employeeManager, workerRegistrationForm.getPESEL(),workerRegistrationForm.getPayAccountNumber(),
-                    workerRegistrationForm.getAddress());
+    public ServiceResponse<Object> registerWarehouseManager(WorkerRegistrationForm form) {
+        ServiceResponse<Object> check = checkGivenEmployer(form.getEmployerId());
+        if(!check.getMessage().equalsIgnoreCase("OK")) return check;
+        EmployeeManager employeeManager = employeeManagerRepository.findById(form.getEmployerId()).orElse(null);
+        if(userRepository.existsById(form.getUserId())){
+            if(employeeManagerRepository.existsByUserId(form.getUserId()))
+                return new ServiceResponse<>(Optional.empty(), "User with given id is an employee manager");
+            if(workerRepository.existsByUserId(form.getUserId()))
+                return new ServiceResponse<>(Optional.empty(), "User with given id is a worker");
+            User user = userRepository.findById(form.getUserId()).orElse(null);
+            WarehouseManager warehouseManager = new WarehouseManager(form.getMonthlyPay(),
+                    user, employeeManager, form.getPesel(),form.getPayAccountNumber(),
+                    form.getAddress());
             warehouseManagerRepository.save(warehouseManager);
             return new ServiceResponse<>(Optional.of(warehouseManager), "Warehouse manager saved with existing user");
         }
-        User user = new User(workerRegistrationForm.getName(), workerRegistrationForm.getSurname(),
-                workerRegistrationForm.getEmail(), workerRegistrationForm.getPhoneNumber(),
-                workerRegistrationForm.getPassword());
+        if(userRepository.existsByEmail(form.getEmail()))
+            return new ServiceResponse<>(Optional.empty(), "User with that email already exists");
+        User user = new User(form.getName(), form.getSurname(),
+                form.getEmail(), form.getPhoneNumber(),
+                form.getPassword());
         userRepository.save(user);
-        WarehouseManager warehouseManager = new WarehouseManager(workerRegistrationForm.getMonthlyPay(),
-                user, employeeManager, workerRegistrationForm.getPESEL(),workerRegistrationForm.getPayAccountNumber(),
-                workerRegistrationForm.getAddress());
+        WarehouseManager warehouseManager = new WarehouseManager(form.getMonthlyPay(),
+                user, employeeManager, form.getPesel(),form.getPayAccountNumber(),
+                form.getAddress());
         warehouseManagerRepository.save(warehouseManager);
         return new ServiceResponse<>(Optional.of(warehouseManager), "WarehouseManager saved with created user");
     }
 
-    public ServiceResponse<EmployeeManager> registerEmployeeManager(WorkerRegistrationForm workerRegistrationForm) {
-        if(userRepository.existsById(workerRegistrationForm.getUserId())){
-            User user = userRepository.findById(workerRegistrationForm.getUserId()).orElse(null);
-            EmployeeManager employeeManager = new EmployeeManager(workerRegistrationForm.getMonthlyPay(),
-                    user);
+    public ServiceResponse<EmployeeManager> registerEmployeeManager(WorkerRegistrationForm form) {
+        if(userRepository.existsById(form.getUserId())){
+            if(warehouseManagerRepository.existsByUserId(form.getUserId()))
+                return new ServiceResponse<>(Optional.empty(), "User with given id is a warehouse manager");
+            if(workerRepository.existsByUserId(form.getUserId()))
+                return new ServiceResponse<>(Optional.empty(), "User with given id is a worker");
+            User user = userRepository.findById(form.getUserId()).orElse(null);
+            EmployeeManager employeeManager = new EmployeeManager(form.getMonthlyPay()
+                    ,user, form.getPesel(),
+                    form.getPayAccountNumber(),
+                    form.getAddress());
             employeeManagerRepository.save(employeeManager);
             return new ServiceResponse<>(Optional.of(employeeManager), "Employee manager saved with existing user");
         }
-        User user = new User(workerRegistrationForm.getName(), workerRegistrationForm.getSurname(),
-                workerRegistrationForm.getEmail(), workerRegistrationForm.getPhoneNumber(),
-                workerRegistrationForm.getPassword());
+        if(userRepository.existsByEmail(form.getEmail()))
+            return new ServiceResponse<>(Optional.empty(), "User with that email already exists");
+        User user = new User(form.getName(), form.getSurname(),
+                form.getEmail(), form.getPhoneNumber(),
+                form.getPassword());
         userRepository.save(user);
-        EmployeeManager employeeManager = new EmployeeManager(workerRegistrationForm.getMonthlyPay(),
-                user);
+        EmployeeManager employeeManager = new EmployeeManager(form.getMonthlyPay(),
+                user, form.getPesel(),
+                form.getPayAccountNumber(),
+                form.getAddress());
         employeeManagerRepository.save(employeeManager);
         return new ServiceResponse<>(Optional.of(employeeManager), "Employee Manager saved with created user");
     }
@@ -142,4 +163,14 @@ public class RegistrationService {
             return new ServiceResponse<>(Optional.empty(), "Wrong password");
         return new ServiceResponse<>(warehouseManager, "Warehouse Manager logged in");
     }
+
+    private ServiceResponse<Object> checkGivenEmployer(int employerId){
+        if(employerId==0) return new ServiceResponse<>(Optional.empty(), "Employer nor provided");
+        if(!employeeManagerRepository.existsById(employerId)){
+            return new ServiceResponse<>(Optional.empty(), "Employer manager doesn't exist");
+        }
+
+        return new ServiceResponse<>(Optional.empty(), "OK");
+    }
+
 }

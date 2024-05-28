@@ -1,5 +1,6 @@
 package com.mikolaj.e_library.controller;
 
+import com.mikolaj.e_library.DTO.CopiesForm;
 import com.mikolaj.e_library.DTO.ResponseUtil;
 import com.mikolaj.e_library.DTO.ServiceResponse;
 import com.mikolaj.e_library.model.Book;
@@ -17,7 +18,17 @@ public class WarehouseManagerController {
     public WarehouseManagerController(WarehouseManagerService warehouseManagerService) {
         this.warehouseManagerService = warehouseManagerService;
     }
-
+/*
+    {
+            "bookType": "paperback",
+            "title": "siema",
+            "releaseDate": "2022-01-01",
+            "bookCategory": "fantasy",
+            "imageUrl": "costmta.jpg",
+            "bookAuthor": "Rojek",
+            "description": "blebleblbel"
+    }
+    */
     @PostMapping("/addBook")
     public ResponseEntity<?> addBook(@RequestBody Book book) {
         ServiceResponse<Book> serviceResponse = warehouseManagerService.addBook(book);
@@ -26,6 +37,18 @@ public class WarehouseManagerController {
 
     }
 
+   /*
+   {
+        "bookId": 2,
+            "bookType": "paperback",
+            "title": "siema",
+            "releaseDate": "2022-01-01",
+            "bookCategory": "fantasy",
+            "imageUrl": "costmta.jpg",
+            "bookAuthor": "Rojek",
+            "description": "blebleblbel"
+    }
+    */
     @PutMapping("/updateBook")
     public ResponseEntity<?> updateBook(@RequestBody Book book) {
         ServiceResponse<Book> serviceResponse = warehouseManagerService.updateBook(book);
@@ -35,6 +58,11 @@ public class WarehouseManagerController {
         return ResponseUtil.okResponse(serviceResponse.getMessage(), "Book", serviceResponse.getData().get());
     }
 
+    /*
+    {
+        "bookId": 2
+    }
+     */
     @DeleteMapping("/deleteBook")
     public ResponseEntity<?> deleteBook(@RequestBody Book book) {
         ServiceResponse<Book> serviceResponse = warehouseManagerService.deleteBook(book);
@@ -43,19 +71,35 @@ public class WarehouseManagerController {
         }
         return ResponseUtil.okResponse(serviceResponse.getMessage(), "Book", serviceResponse.getData().get());
     }
-
-    @PostMapping("/addBookCopy")
-    public ResponseEntity<?> addBookCopy(@RequestBody BookCopy bookCopy) {
-        ServiceResponse<BookCopy> serviceResponse = warehouseManagerService.addBookCopy(bookCopy);
+    /*
+        {
+            "bookId": 3,
+            "shelfPlace": "4g",
+            "workerId": 1
+        }
+     */
+    @PostMapping("/addBookCopy/copies={numberOfCopies}")
+    public ResponseEntity<?> addBookCopy(@RequestBody CopiesForm copiesForm, @PathVariable Integer numberOfCopies) {
+        ServiceResponse<BookCopy> serviceResponse = warehouseManagerService.addBookCopy(copiesForm, numberOfCopies);
         if (serviceResponse.getData().isEmpty()) {
             return ResponseUtil.badRequestResponse(serviceResponse.getMessage());
         }
         return ResponseUtil.okResponse(serviceResponse.getMessage(), "BookCopy", serviceResponse.getData().get());
     }
-
+    /*
+    {
+        "copyId": 4,
+        "shelfPlace": "5f",
+        "bookId": 2,
+        // UWAGA RENTALSTATUS TO ENUM I PRZYJMUJE TYLKO JEDNA Z WARTOŚCI ENUMA RENTALSTATUS
+        "rentalStatus": "active",
+        "qualityStatus": "pretty bad",
+        "workerId": 2
+    }
+    */
     @PutMapping("/updateBookCopy")
-    public ResponseEntity<?> updateBookCopy(@RequestBody BookCopy bookCopy) {
-        ServiceResponse<BookCopy> serviceResponse = warehouseManagerService.updateBookCopy(bookCopy);
+    public ResponseEntity<?> updateBookCopy(@RequestBody CopiesForm copiesForm) {
+        ServiceResponse<BookCopy> serviceResponse = warehouseManagerService.updateBookCopy(copiesForm);
         if (serviceResponse.getData().isEmpty()) {
             return ResponseUtil.badRequestResponse(serviceResponse.getMessage());
         }

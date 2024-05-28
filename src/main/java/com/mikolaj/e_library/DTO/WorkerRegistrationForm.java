@@ -15,7 +15,7 @@ public class WorkerRegistrationForm {
     private String password;
     private String surname;
     private String address;
-    private String PESEL;
+    private String pesel;
     private String payAccountNumber;
     private int userId;
     private int employerId;

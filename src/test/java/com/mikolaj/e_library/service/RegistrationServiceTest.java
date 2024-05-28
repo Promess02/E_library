@@ -91,7 +91,7 @@ class RegistrationServiceTest {
     void testRegisterWorker_EmployerNotExists() {
         when(employeeManagerRepository.existsById(workerRegistrationForm.getEmployerId())).thenReturn(false);
 
-        ServiceResponse<Worker> response = registrationService.registerWorker(workerRegistrationForm);
+        ServiceResponse<Object> response = registrationService.registerWorker(workerRegistrationForm);
 
         assertTrue(response.getData().isEmpty());
         assertEquals("Employer manager doesn't exist", response.getMessage());
@@ -104,7 +104,7 @@ class RegistrationServiceTest {
         when(userRepository.existsById(workerRegistrationForm.getUserId())).thenReturn(true);
         when(userRepository.findById(workerRegistrationForm.getUserId())).thenReturn(Optional.of(user));
 
-        ServiceResponse<Worker> response = registrationService.registerWorker(workerRegistrationForm);
+        ServiceResponse<Object> response = registrationService.registerWorker(workerRegistrationForm);
 
         assertTrue(response.getData().isPresent());
         assertEquals("Worker saved with existing user", response.getMessage());
@@ -117,7 +117,7 @@ class RegistrationServiceTest {
         when(userRepository.existsById(workerRegistrationForm.getUserId())).thenReturn(false);
         when(userRepository.save(any(User.class))).thenReturn(user);
 
-        ServiceResponse<Worker> response = registrationService.registerWorker(workerRegistrationForm);
+        ServiceResponse<Object> response = registrationService.registerWorker(workerRegistrationForm);
 
         assertTrue(response.getData().isPresent());
         assertEquals("Worker saved with created user", response.getMessage());
@@ -148,7 +148,7 @@ class RegistrationServiceTest {
     void testRegisterWarehouseManager_EmployerNotExists() {
         when(employeeManagerRepository.existsById(workerRegistrationForm.getEmployerId())).thenReturn(false);
 
-        ServiceResponse<WarehouseManager> response = registrationService.registerWarehouseManager(workerRegistrationForm);
+        ServiceResponse<Object> response = registrationService.registerWarehouseManager(workerRegistrationForm);
 
         assertTrue(response.getData().isEmpty());
         assertEquals("Employer manager doesn't exist", response.getMessage());
@@ -161,7 +161,7 @@ class RegistrationServiceTest {
         when(userRepository.existsById(workerRegistrationForm.getUserId())).thenReturn(true);
         when(userRepository.findById(workerRegistrationForm.getUserId())).thenReturn(Optional.of(user));
 
-        ServiceResponse<WarehouseManager> response = registrationService.registerWarehouseManager(workerRegistrationForm);
+        ServiceResponse<Object> response = registrationService.registerWarehouseManager(workerRegistrationForm);
 
         assertTrue(response.getData().isPresent());
         assertEquals("Warehouse manager saved with existing user", response.getMessage());
@@ -174,7 +174,7 @@ class RegistrationServiceTest {
         when(userRepository.existsById(workerRegistrationForm.getUserId())).thenReturn(false);
         when(userRepository.save(any(User.class))).thenReturn(user);
 
-        ServiceResponse<WarehouseManager> response = registrationService.registerWarehouseManager(workerRegistrationForm);
+        ServiceResponse<Object> response = registrationService.registerWarehouseManager(workerRegistrationForm);
 
         assertTrue(response.getData().isPresent());
         assertEquals("WarehouseManager saved with created user", response.getMessage());

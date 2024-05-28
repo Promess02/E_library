@@ -1,5 +1,6 @@
 package com.mikolaj.e_library.service;
 
+import com.mikolaj.e_library.DTO.CopiesForm;
 import com.mikolaj.e_library.DTO.ServiceResponse;
 import com.mikolaj.e_library.model.Book;
 import com.mikolaj.e_library.model.BookCopy;
@@ -119,8 +120,9 @@ class WarehouseManagerServiceTest {
     void addBookCopy_Success() {
         BookCopy bookCopy = new BookCopy();
         when(bookCopyRepository.save(any(BookCopy.class))).thenReturn(bookCopy);
+        CopiesForm copiesForm = new CopiesForm();
 
-        ServiceResponse<BookCopy> response = warehouseManagerService.addBookCopy(bookCopy);
+        ServiceResponse<BookCopy> response = warehouseManagerService.addBookCopy(copiesForm, 1);
 
         assertTrue(response.getData().isPresent());
         assertEquals("Book copy added successfully", response.getMessage());
@@ -131,8 +133,9 @@ class WarehouseManagerServiceTest {
     void addBookCopy_Failure() {
         BookCopy bookCopy = new BookCopy();
         when(bookCopyRepository.save(any(BookCopy.class))).thenThrow(new RuntimeException("Error"));
+        CopiesForm copiesForm = new CopiesForm();
 
-        ServiceResponse<BookCopy> response = warehouseManagerService.addBookCopy(bookCopy);
+        ServiceResponse<BookCopy> response = warehouseManagerService.addBookCopy(copiesForm, 1);
 
         assertFalse(response.getData().isPresent());
         assertEquals("Error adding book copy: Error", response.getMessage());
@@ -143,10 +146,11 @@ class WarehouseManagerServiceTest {
     void updateBookCopy_Success() {
         BookCopy bookCopy = new BookCopy();
         bookCopy.setCopyId(1);
+        CopiesForm copiesForm = new CopiesForm();
         when(bookCopyRepository.existsById(bookCopy.getCopyId())).thenReturn(true);
         when(bookCopyRepository.save(any(BookCopy.class))).thenReturn(bookCopy);
 
-        ServiceResponse<BookCopy> response = warehouseManagerService.updateBookCopy(bookCopy);
+        ServiceResponse<BookCopy> response = warehouseManagerService.updateBookCopy(copiesForm);
 
         assertTrue(response.getData().isPresent());
         assertEquals("Book copy updated successfully", response.getMessage());
@@ -159,8 +163,9 @@ class WarehouseManagerServiceTest {
         BookCopy bookCopy = new BookCopy();
         bookCopy.setCopyId(1);
         when(bookCopyRepository.existsById(bookCopy.getCopyId())).thenReturn(false);
+        CopiesForm copiesForm = new CopiesForm();
 
-        ServiceResponse<BookCopy> response = warehouseManagerService.updateBookCopy(bookCopy);
+        ServiceResponse<BookCopy> response = warehouseManagerService.updateBookCopy(copiesForm);
 
         assertFalse(response.getData().isPresent());
         assertEquals("Book copy not found", response.getMessage());

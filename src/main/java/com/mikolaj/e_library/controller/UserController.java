@@ -6,6 +6,7 @@ import com.mikolaj.e_library.DTO.ServiceResponse;
 import com.mikolaj.e_library.DTO.WorkerRegistrationForm;
 import com.mikolaj.e_library.model.Reader;
 import com.mikolaj.e_library.model.User;
+import com.mikolaj.e_library.service.LoginComponent;
 import com.mikolaj.e_library.service.RegistrationService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,9 +17,11 @@ import org.springframework.web.bind.annotation.*;
 @CrossOrigin(origins = "http://localhost:3000") // Add @CrossOrigin annotation to enable CORS for this method
 public class UserController {
     private final RegistrationService registrationService;
+    private final LoginComponent loginComponent;
 
-    public UserController(RegistrationService registrationService) {
+    public UserController(RegistrationService registrationService, LoginComponent loginComponent) {
         this.registrationService = registrationService;
+        this.loginComponent = loginComponent;
     }
 
     /*Rejestruje czytelnika
@@ -61,7 +64,7 @@ public class UserController {
     zwróci odpowiedź badRequest. Można stworzyć pracownika poprzez podanie nowych informacji albo id istniejącego
     użytkownika. Żądanie:
 
-    Nie działa coś te HTTP XD
+    1 sposób - wszystkie dane
     {
         "workerType": "worker",
         "name": "mikolaj",
@@ -69,7 +72,19 @@ public class UserController {
         "email": "miko@wp.pl",
         "password": "nowe_haslo",
         "surname": "tajne_haslo",
-        "userId": 4,
+        "pesel": "121415",
+        "payAccountNumber": "241441421",
+        "address": "Zakatek 12",
+        "employerId": 2,
+        "monthlyPay": 2345
+    }
+    2 sposób - rejestracja przez istniejącego użytkownika
+        {
+        "workerType": "worker",
+        "userId": 1,
+        "pesel": "121415",
+        "payAccountNumber": "241441421",
+        "address": "Zakatek 12",
         "employerId": 2,
         "monthlyPay": 2345
     }
@@ -103,16 +118,16 @@ public class UserController {
     @GetMapping("/login")
     public ResponseEntity<?> loginUsers(@RequestBody LoginForm loginForm){
         ServiceResponse<?> response;
-        if(loginForm.getUserType().equalsIgnoreCase("worker")){
-            response = registrationService.loginWorker(loginForm);
-        } else if(loginForm.getUserType().equalsIgnoreCase("warehouse Manager")){
-            response = registrationService.loginWarehouseManager(loginForm);
-        } else if(loginForm.getUserType().equalsIgnoreCase("employee Manager")){
-            response = registrationService.loginEmployeeManager(loginForm);
-        } else if(loginForm.getUserType().equalsIgnoreCase("reader")){
-            response = registrationService.loginReader(loginForm);
-        }else{
-            return ResponseUtil.badRequestResponse("incorrect user type provided");
+        String userType = loginComponent.checkUser(loginForm.getEmail());
+
+        switch (userType){
+            case "worker" -> response = registrationService.loginWorker(loginForm);
+            case "reader" -> response = registrationService.loginReader(loginForm);
+            case "employee manager" -> response = registrationService.loginEmployeeManager(loginForm);
+            case "warehouse manager" -> response = registrationService.loginWarehouseManager(loginForm);
+            default -> {
+                return ResponseUtil.badRequestResponse("No user with email registered");
+            }
         }
         if(response.getData().isEmpty()) return ResponseUtil.badRequestResponse(response.getMessage());
         return ResponseUtil.okResponse(response.getMessage(),"User", response.getData());

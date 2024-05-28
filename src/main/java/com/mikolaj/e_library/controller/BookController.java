@@ -54,7 +54,7 @@ public class BookController {
         "size": 3
         }
     */
-    @PostMapping("/getAllPaginated")
+    @GetMapping("/getAllPaginated")
     public ResponseEntity<?> getBooks(@RequestBody Pagination pagination){
         Page<Book> booksPage;
 

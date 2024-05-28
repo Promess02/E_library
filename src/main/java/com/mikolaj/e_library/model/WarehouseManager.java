@@ -44,7 +44,7 @@ public class WarehouseManager implements Serializable {
 	private User user;
 
 	@Column(name = "pesel", nullable = false)
-	private String PESEL;
+	private String pesel;
 
 	@Column(name = "pay_account_number", nullable = false)
 	private String payAccountNumber;
@@ -69,7 +69,7 @@ public class WarehouseManager implements Serializable {
 		this.monthlyPay = monthlyPay;
 		this.user = user;
 		this.employedBy = employedBy;
-		this.PESEL = PESEL;
+		this.pesel = PESEL;
 		this.payAccountNumber = payAccountNumber;
 		this.address = address;
 	}
