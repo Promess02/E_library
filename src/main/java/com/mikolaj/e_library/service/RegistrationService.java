@@ -52,10 +52,8 @@ public class RegistrationService {
         if(!check.getMessage().equalsIgnoreCase("OK")) return check;
         EmployeeManager employeeManager = employeeManagerRepository.findById(form.getEmployerId()).orElse(null);
         if(userRepository.existsById(form.getUserId())){
-            if(employeeManagerRepository.existsByUserId(form.getUserId()))
-                return new ServiceResponse<>(Optional.empty(), "User with given id is an employee manager");
-            if(warehouseManagerRepository.existsByUserId(form.getUserId()))
-                return new ServiceResponse<>(Optional.empty(), "User with given id is a warehouse manager");
+            ServiceResponse<Object> checkUser = checkIfExistsWithUserId(form.getUserId());
+            if(!check.getMessage().equals("ok")) return checkUser;
             User user = userRepository.findById(form.getUserId()).orElse(null);
             Worker worker = new Worker(form.getMonthlyPay(),
                     user, employeeManager, form.getPesel(), form.getPayAccountNumber(),form.getAddress());
@@ -80,11 +78,10 @@ public class RegistrationService {
         if(!check.getMessage().equalsIgnoreCase("OK")) return check;
         EmployeeManager employeeManager = employeeManagerRepository.findById(form.getEmployerId()).orElse(null);
         if(userRepository.existsById(form.getUserId())){
-            if(employeeManagerRepository.existsByUserId(form.getUserId()))
-                return new ServiceResponse<>(Optional.empty(), "User with given id is an employee manager");
-            if(workerRepository.existsByUserId(form.getUserId()))
-                return new ServiceResponse<>(Optional.empty(), "User with given id is a worker");
+            ServiceResponse<Object> checkUser = checkIfExistsWithUserId(form.getUserId());
+            if(!check.getMessage().equals("ok")) return checkUser;
             User user = userRepository.findById(form.getUserId()).orElse(null);
+
             WarehouseManager warehouseManager = new WarehouseManager(form.getMonthlyPay(),
                     user, employeeManager, form.getPesel(),form.getPayAccountNumber(),
                     form.getAddress());
@@ -104,12 +101,10 @@ public class RegistrationService {
         return new ServiceResponse<>(Optional.of(warehouseManager), "WarehouseManager saved with created user");
     }
 
-    public ServiceResponse<EmployeeManager> registerEmployeeManager(WorkerRegistrationForm form) {
+    public ServiceResponse<Object> registerEmployeeManager(WorkerRegistrationForm form) {
         if(userRepository.existsById(form.getUserId())){
-            if(warehouseManagerRepository.existsByUserId(form.getUserId()))
-                return new ServiceResponse<>(Optional.empty(), "User with given id is a warehouse manager");
-            if(workerRepository.existsByUserId(form.getUserId()))
-                return new ServiceResponse<>(Optional.empty(), "User with given id is a worker");
+            ServiceResponse<Object> check = checkIfExistsWithUserId(form.getUserId());
+            if(!check.getMessage().equals("ok")) return check;
             User user = userRepository.findById(form.getUserId()).orElse(null);
             EmployeeManager employeeManager = new EmployeeManager(form.getMonthlyPay()
                     ,user, form.getPesel(),
@@ -171,6 +166,16 @@ public class RegistrationService {
         }
 
         return new ServiceResponse<>(Optional.empty(), "OK");
+    }
+
+    private ServiceResponse<Object> checkIfExistsWithUserId(int id){
+        if(employeeManagerRepository.existsByUserId(id))
+            return new ServiceResponse<>(Optional.empty(), "User with given id is an employee manager");
+        if(workerRepository.existsByUserId(id))
+            return new ServiceResponse<>(Optional.empty(), "User with given id is a worker");
+        if(warehouseManagerRepository.existsByUserId(id))
+            return new ServiceResponse<>(Optional.empty(), "User with given id is a warehouse Manager");
+        return new ServiceResponse<>(Optional.empty(), "ok");
     }
 
 }

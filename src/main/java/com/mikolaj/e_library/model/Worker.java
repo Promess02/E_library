@@ -39,7 +39,7 @@ public class Worker implements Serializable {
 	private int monthlyPay;
 
 	@Column(name = "pesel", nullable = false)
-	private String PESEL;
+	private String pesel;
 
 	@Column(name = "pay_account_number", nullable = false)
 	private String payAccountNumber;
@@ -61,9 +61,9 @@ public class Worker implements Serializable {
 		this.employedBy = employedBy;
 	}
 
-	public Worker(int monthlyPay, User user, EmployeeManager employedBy, String PESEL, String payAccountNumber, String address) {
+	public Worker(int monthlyPay, User user, EmployeeManager employedBy, String pesel, String payAccountNumber, String address) {
 		this.monthlyPay = monthlyPay;
-		this.PESEL = PESEL;
+		this.pesel = pesel;
 		this.payAccountNumber = payAccountNumber;
 		this.address = address;
 		this.user = user;

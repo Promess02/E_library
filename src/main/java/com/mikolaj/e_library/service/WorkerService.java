@@ -68,6 +68,8 @@ public class WorkerService {
             return new ServiceResponse<>(Optional.empty(), "Rental Not Found");
         }
         Rental rentalDb = rentalRepository.findById(rental.getRentalId()).get();
+        if(rentalDb.getStatus().equals(RentalStatus.INACTIVE) || rentalDb.getStatus().equals(RentalStatus.PROLONGED))
+            return new ServiceResponse<>(Optional.empty(), "Rental already returned");
         LocalDate start = rentalDb.getRentalDate();
         LocalDate end = LocalDate.now();
         rentalDb.setRentalReturnDate(end);
@@ -80,7 +82,7 @@ public class WorkerService {
         }
         else {
             rentalDb.setPenalty(0f);
-            rental.setStatus(RentalStatus.INACTIVE);
+            rentalDb.setStatus(RentalStatus.INACTIVE);
         }
         Optional<BookCopy> copyDb = bookCopyRepository.findById(rentalDb.getBookCopy().getCopyId());
         if(copyDb.isEmpty()){

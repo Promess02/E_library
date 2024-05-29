@@ -40,14 +40,22 @@ public class EmployeeManagerService {
     public ServiceResponse<Worker> updateWorker(Worker worker) {
         if(!workerRepository.existsById(worker.getWorkerId()))
             return new ServiceResponse<>(Optional.empty(), "worker not found");
-        Worker newWorker = workerRepository.save(worker);
-        return new ServiceResponse<>(Optional.of(newWorker), "worker updated");
+        Worker updatedWorker = workerRepository.findById(worker.getWorkerId()).get();
+        if(worker.getPesel()!=null) updatedWorker.setPesel(worker.getPesel());
+        if(worker.getPayAccountNumber()!=null) updatedWorker.setPayAccountNumber(worker.getPayAccountNumber());
+        if(worker.getAddress()!=null) updatedWorker.setAddress(worker.getAddress());
+        workerRepository.save(updatedWorker);
+        return new ServiceResponse<>(Optional.of(updatedWorker), "worker updated");
     }
     public ServiceResponse<WarehouseManager> updateWarehouseManager(WarehouseManager warehouseManager) {
         if(!warehouseManagerRepository.existsById(warehouseManager.getWareManId()))
             return new ServiceResponse<>(Optional.empty(), "warehouseManager not found");
-        WarehouseManager newWarehouseManager = warehouseManagerRepository.save(warehouseManager);
-        return new ServiceResponse<>(Optional.of(newWarehouseManager), "warehouseManager updated");
+        WarehouseManager updatedWarehouseManager = warehouseManagerRepository.findById(warehouseManager.getWareManId()).get();
+        if(warehouseManager.getPesel()!=null) updatedWarehouseManager.setPesel(warehouseManager.getPesel());
+        if(warehouseManager.getPayAccountNumber()!=null) updatedWarehouseManager.setPayAccountNumber(warehouseManager.getPayAccountNumber());
+        if(warehouseManager.getAddress()!=null) updatedWarehouseManager.setAddress(warehouseManager.getAddress());
+        warehouseManagerRepository.save(updatedWarehouseManager);
+        return new ServiceResponse<>(Optional.of(updatedWarehouseManager), "warehouseManager updated");
     }
 
     public ServiceResponse<Worker> deleteWorker(Worker worker) {
@@ -67,16 +75,17 @@ public class EmployeeManagerService {
     public ServiceResponse<Worker> changeWorkerMonthlyPay(PayRiseForm payRiseForm) {
         if(!workerRepository.existsById(payRiseForm.getWorkerId()))
             return new ServiceResponse<>(Optional.empty(), "worker not found");
-        Optional<Worker> worker = workerRepository.findById(payRiseForm.getWorkerId());
-        worker.get().setMonthlyPay(payRiseForm.getMonthlyPay());
-        return new ServiceResponse<>(worker, "worker pay changed");
+        Worker worker = workerRepository.findById(payRiseForm.getWorkerId()).get();
+        worker.setMonthlyPay(payRiseForm.getMonthlyPay());
+        return new ServiceResponse<>(Optional.of(worker), "worker pay changed");
     }
 
     public ServiceResponse<WarehouseManager> changeWarehouseManagerMonthlyPay(PayRiseForm payRiseForm) {
         if(!warehouseManagerRepository.existsById(payRiseForm.getWorkerId()))
             return new ServiceResponse<>(Optional.empty(), "warehouse Manager not found");
-        Optional<WarehouseManager> warehouseManager = warehouseManagerRepository.findById(payRiseForm.getWorkerId());
-        warehouseManager.get().setMonthlyPay(payRiseForm.getMonthlyPay());
-        return new ServiceResponse<>(warehouseManager, "warehouse manager pay changed");
+        WarehouseManager warehouseManager = warehouseManagerRepository.findById(payRiseForm.getWorkerId()).get();
+        warehouseManager.setMonthlyPay(payRiseForm.getMonthlyPay());
+        warehouseManagerRepository.save(warehouseManager);
+        return new ServiceResponse<>(Optional.of(warehouseManager), "warehouse manager pay changed");
     }
 }

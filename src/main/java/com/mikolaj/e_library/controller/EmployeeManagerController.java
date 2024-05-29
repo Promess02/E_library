@@ -40,10 +40,13 @@ public class EmployeeManagerController {
 
     /*
         {
-            
+            "workerId": 1,
+            "pesel": "1241421",
+            "payAccountNumber": "3264151",
+            "address": "Kochanów Wieniawski 23a"
         }
      */
-    @PutMapping("/updateWorker")
+    @PatchMapping("/updateWorker")
     public ResponseEntity<?> updateWorker(@RequestBody Worker worker) {
         ServiceResponse<Worker> response = employeeManagerService.updateWorker(worker);
         if (response.getData().isEmpty()) {
@@ -52,7 +55,15 @@ public class EmployeeManagerController {
         return ResponseUtil.okResponse(response.getMessage(), "Worker", response.getData().get());
     }
 
-    @PutMapping("/updateWarehouseManager")
+    /*
+    {
+        "wareManId": 1,
+        "pesel": "1241421",
+        "payAccountNumber": "3264151",
+        "address": "Kochanów Wieniawski 23a"
+    }
+ */
+    @PatchMapping("/updateWarehouseManager")
     public ResponseEntity<?> updateWarehouseManager(@RequestBody WarehouseManager warehouseManager) {
         ServiceResponse<WarehouseManager> response = employeeManagerService.updateWarehouseManager(warehouseManager);
         if (response.getData().isEmpty()) {
@@ -60,7 +71,11 @@ public class EmployeeManagerController {
         }
         return ResponseUtil.okResponse(response.getMessage(), "WarehouseManager", response.getData().get());
     }
-
+    /*
+    {
+        "workerId": 2
+    }
+    */
     @DeleteMapping("/deleteWorker")
     public ResponseEntity<?> deleteWorker(@RequestBody Worker worker) {
         ServiceResponse<Worker> response = employeeManagerService.deleteWorker(worker);
@@ -69,7 +84,11 @@ public class EmployeeManagerController {
         }
         return ResponseUtil.okResponse(response.getMessage(), "Worker", response.getData().get());
     }
-
+/*
+    {
+        "wareManId":2
+    }
+ */
     @DeleteMapping("/deleteWarehouseManager")
     public ResponseEntity<?> deleteWarehouseManager(@RequestBody WarehouseManager warehouseManager) {
         ServiceResponse<WarehouseManager> response = employeeManagerService.deleteWarehouseManager(warehouseManager);
@@ -78,8 +97,13 @@ public class EmployeeManagerController {
         }
         return ResponseUtil.okResponse(response.getMessage(), "WarehouseManager", response.getData().get());
     }
-
-    @PutMapping("/changeWorkerMonthlyPay")
+/*
+{
+    "workerId": 1,
+    "monthlyPay": 5000
+}
+ */
+    @PatchMapping("/changeWorkerMonthlyPay")
     public ResponseEntity<?> changeWorkerMonthlyPay(@RequestBody PayRiseForm payRiseForm) {
         ServiceResponse<Worker> response = employeeManagerService.changeWorkerMonthlyPay(payRiseForm);
         if (response.getData().isEmpty()) {
@@ -88,7 +112,13 @@ public class EmployeeManagerController {
         return ResponseUtil.okResponse(response.getMessage(), "Worker", response.getData().get());
     }
 
-    @PutMapping("/changeWarehouseManagerMonthlyPay")
+    /*
+    {
+        "workerId": 1,
+            "monthlyPay": 5000
+    }
+     */
+    @PatchMapping("/changeWarehouseManagerMonthlyPay")
     public ResponseEntity<?> changeWarehouseManagerMonthlyPay(@RequestBody PayRiseForm payRiseForm) {
         ServiceResponse<WarehouseManager> response = employeeManagerService.changeWarehouseManagerMonthlyPay(payRiseForm);
         if (response.getData().isEmpty()) {
