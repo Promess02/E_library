@@ -26,8 +26,10 @@ public class WorkerController {
     private final WorkerService workerService;
     private final NewsPostRepository newsPostRepository;
     private final WorkerRepository workerRepository;
+    private final RentalRepository rentalRepository;
+    private final UserRepository userRepository;
 
-    public WorkerController(BookRepository bookRepository, BookRatingRepository bookRatingRepository, BookCopyRepository bookCopyRepository, ReaderService readerService, ReaderRepository readerRepository, WorkerService workerService, NewsPostRepository newsPostRepository, WorkerRepository workerRepository) {
+    public WorkerController(BookRepository bookRepository, BookRatingRepository bookRatingRepository, BookCopyRepository bookCopyRepository, ReaderService readerService, ReaderRepository readerRepository, WorkerService workerService, NewsPostRepository newsPostRepository, WorkerRepository workerRepository, RentalRepository rentalRepository, UserRepository userRepository) {
         this.bookRepository = bookRepository;
         this.bookRatingRepository = bookRatingRepository;
         this.bookCopyRepository = bookCopyRepository;
@@ -36,6 +38,8 @@ public class WorkerController {
         this.workerService = workerService;
         this.newsPostRepository = newsPostRepository;
         this.workerRepository = workerRepository;
+        this.rentalRepository = rentalRepository;
+        this.userRepository = userRepository;
     }
 
     /*
@@ -67,6 +71,14 @@ Wypożycza książkę(Book.class) o danym id dla czytelnika z danym id na podan�
         return ResponseUtil.okResponse(response.getMessage(), "Rental", response.getData().get());
     }
 
+    /*
+    {
+    "workerId": 1,
+    "name": "nowy post",
+    "contents": "zawartosc",
+    "imageUrl": "/newimageurl"
+    }
+ */
     @PostMapping("/addNewsPost")
     public ResponseEntity<?> addNewsPost(@RequestBody AddNewsPostForm addNewsPostForm){
         ServiceResponse<?> response = workerService.addNewsPost(addNewsPostForm);
@@ -74,6 +86,16 @@ Wypożycza książkę(Book.class) o danym id dla czytelnika z danym id na podan�
         return ResponseUtil.okResponse(response.getMessage(), "News post", response.getData().get());
     }
 
+
+    /*
+    {
+    "workerId": 1,
+    "name": "nowy post",
+    "newsPostId": 1,
+    "contents": "zmieniona zawartość",
+    "imageUrl": "/newimageurl"
+    }
+ */
     @PutMapping("/updateNewsPost")
     public ResponseEntity<?> updateNewsPost(@RequestBody AddNewsPostForm addNewsPostForm){
         ServiceResponse<?> response = workerService.updateNewsPost(addNewsPostForm);
@@ -81,9 +103,13 @@ Wypożycza książkę(Book.class) o danym id dla czytelnika z danym id na podan�
         return ResponseUtil.okResponse(response.getMessage(), "News post", response.getData().get());
     }
 
-    @DeleteMapping("/deleteNewsPost")
-    public ResponseEntity<?> deleteNewsPost(@RequestBody int newsPostId){
-        ServiceResponse<?> response = workerService.deleteNewsPost(newsPostId);
+    /*
+    W url żądania podajemy id posta do usunięcia. Przykład url:
+    http://localhost:8080/worker/deleteNewsPost/post=1
+ */
+    @DeleteMapping("/deleteNewsPost/postId={postId}")
+    public ResponseEntity<?> deleteNewsPost(@PathVariable int postId){
+        ServiceResponse<?> response = workerService.deleteNewsPost(postId);
         if(response.getData().isEmpty())  return ResponseUtil.badRequestResponse("post not found");
         else return ResponseUtil.okResponse(response.getMessage(), "News Post: ", response.getData().get());
     }
@@ -100,6 +126,13 @@ Wypożycza książkę(Book.class) o danym id dla czytelnika z danym id na podan�
         List<NewsPost> readers = newsPostRepository.findAll();
         if(readers.isEmpty()) return ResponseUtil.badRequestResponse("no news posts found");
         return ResponseUtil.okResponse("found news posts", "News posts: ", readers);
+    }
+
+    @GetMapping("/getRentalsForUser/email={userEmail}")
+    public ResponseEntity<?> getActiveRentalsForUser(@PathVariable String userEmail){
+        if(!userRepository.existsByEmail(userEmail)) return ResponseUtil.badRequestResponse("No user with given email found");
+        List<Rental> rentals = rentalRepository.findAllByReaderUserEmailAndStatus(userEmail, RentalStatus.ACTIVE);
+        return  ResponseUtil.okResponse("found rentals", "Rentals: ", rentals);
     }
 
 
