@@ -15,6 +15,10 @@ spring:
     cors:
       mapping:
         /book/getAll:
-          allowed-origins: "http://localhost:3000"
+          allowed-origins: "http://localhost:8080"
           allowed-methods: "GET, POST, PUT, DELETE"
+          allowed-headers: "*"
+        /worker/updateNewsPost:
+          allowed-origins: "http://localhost:3000"
+          allowed-methods: "GET, POST, PUT, DELETE, OPTIONS"
           allowed-headers: "*"
