@@ -109,7 +109,7 @@ public class WorkerService {
     }
 
     public ServiceResponse<NewsPost> updateNewsPost(AddNewsPostForm addNewsPostForm){
-        Optional<NewsPost> newsPost = newsPostRepository.findById(addNewsPostForm.getNewsPostId());
+        Optional<NewsPost> newsPost = newsPostRepository.findById(addNewsPostForm.getPostId());
         if(newsPost.isEmpty()) return new ServiceResponse<>(Optional.empty(), "news post not found");
         Optional<Worker> worker = workerRepository.findById(addNewsPostForm.getWorkerId());
         if(worker.isEmpty()) return new ServiceResponse<>(Optional.empty(), "Worker Not Found");

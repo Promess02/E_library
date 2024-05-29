@@ -82,8 +82,8 @@ Wypożycza książkę(Book.class) o danym id dla czytelnika z danym id na podan�
     }
 
     @DeleteMapping("/deleteNewsPost")
-    public ResponseEntity<?> deleteNewsPost(@RequestBody int newsPostId){
-        ServiceResponse<?> response = workerService.deleteNewsPost(newsPostId);
+    public ResponseEntity<?> deleteNewsPost(@PathVariable int postId){
+        ServiceResponse<?> response = workerService.deleteNewsPost(postId);
         if(response.getData().isEmpty())  return ResponseUtil.badRequestResponse("post not found");
         else return ResponseUtil.okResponse(response.getMessage(), "News Post: ", response.getData().get());
     }
@@ -101,6 +101,4 @@ Wypożycza książkę(Book.class) o danym id dla czytelnika z danym id na podan�
         if(readers.isEmpty()) return ResponseUtil.badRequestResponse("no news posts found");
         return ResponseUtil.okResponse("found news posts", "News posts: ", readers);
     }
-
-
 }
