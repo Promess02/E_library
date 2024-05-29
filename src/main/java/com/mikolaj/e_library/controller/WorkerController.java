@@ -81,7 +81,7 @@ Wypożycza książkę(Book.class) o danym id dla czytelnika z danym id na podan�
         return ResponseUtil.okResponse(response.getMessage(), "News post", response.getData().get());
     }
 
-    @DeleteMapping("/deleteNewsPost")
+    @DeleteMapping("/deleteNewsPost/postId={postId}")
     public ResponseEntity<?> deleteNewsPost(@PathVariable int postId){
         ServiceResponse<?> response = workerService.deleteNewsPost(postId);
         if(response.getData().isEmpty())  return ResponseUtil.badRequestResponse("post not found");
