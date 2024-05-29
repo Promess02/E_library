@@ -62,20 +62,16 @@ public class WarehouseManagerService {
 
     public ServiceResponse<BookCopy> addBookCopy(CopiesForm copiesForm, int numberOfCopies) {
         try {
-            BookCopy bookCopy = new BookCopy();
-            Optional<Book> book = bookRepository.findById(copiesForm.getBookId());
-            if(book.isEmpty()) return new ServiceResponse<>(Optional.empty(), "Book not found");
-            bookCopy.setBook(book.get());
-            bookCopy.setShelfPlace(copiesForm.getShelfPlace());
-            if(copiesForm.getWorkerId()!=0){
-                Optional<WarehouseManager> warehouseManager =
-                        warehouseManagerRepository.findById(copiesForm.getWorkerId());
-                if(warehouseManager.isEmpty()) return new ServiceResponse<>(Optional.empty(), "Worker not found");
-                bookCopy.setAddedBy(warehouseManager.get());
+            ServiceResponse<BookCopy> response = createBookCopy(copiesForm);
+            if(response.getData().isEmpty()) return response;
+            BookCopy bookCopy = response.getData().get();
+            int iterationTimes = 1;
+            if(numberOfCopies>0) iterationTimes = numberOfCopies;
+            BookCopy newBookCopy;
+            for(int i=0; i<iterationTimes;i++){
+                newBookCopy = new BookCopy(bookCopy);
+                bookCopyRepository.save(newBookCopy);
             }
-            int iterationTimes = numberOfCopies>0?numberOfCopies:1;
-            for(int i=0; i<iterationTimes;i++)
-            bookCopyRepository.save(bookCopy);
             return new ServiceResponse<>(Optional.of(bookCopy), "Book copies added successfully");
         } catch (Exception e) {
             return new ServiceResponse<>(Optional.empty(), "Error adding book copy: " + e.getMessage());
@@ -88,6 +84,7 @@ public class WarehouseManagerService {
                 ServiceResponse<BookCopy> response = createBookCopy(copiesForm);
                 if(response.getData().isEmpty()) return response;
                 BookCopy updatedBookCopy = response.getData().get();
+                updatedBookCopy.setCopyId(copiesForm.getCopyId());
                 bookCopyRepository.save(updatedBookCopy);
                 return new ServiceResponse<>(Optional.of(updatedBookCopy), "Book copy updated successfully");
             } catch (Exception e) {

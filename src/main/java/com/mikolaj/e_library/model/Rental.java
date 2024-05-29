@@ -8,8 +8,8 @@ import java.util.Date;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.mikolaj.e_library.DTO.RentalStatus;
-import com.mikolaj.e_library.Persistence.CustomDateDeserializer;
-import com.mikolaj.e_library.Persistence.CustomDateSerializer;
+import com.mikolaj.e_library.DTO.CustomDateDeserializer;
+import com.mikolaj.e_library.DTO.CustomDateSerializer;
 import com.mikolaj.e_library.Persistence.RentalStatusConverter;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -31,13 +31,12 @@ public class Rental implements Serializable {
 	private int rentalId;
 	
 	@Column(name="rental_date", nullable=false)
-	@Temporal(TemporalType.DATE)
+//	@Temporal(TemporalType.DATE)
 	@JsonSerialize(using = CustomDateSerializer.class)
 	@JsonDeserialize(using = CustomDateDeserializer.class)
 	private LocalDate rentalDate;
 	
-	@Column(name="rental_return_date", nullable=false)
-	@Temporal(TemporalType.DATE)
+	@Column(name="rental_return_date")
 	@JsonSerialize(using = CustomDateSerializer.class)
 	@JsonDeserialize(using = CustomDateDeserializer.class)
 	private LocalDate rentalReturnDate;
@@ -55,12 +54,10 @@ public class Rental implements Serializable {
 	@Convert(converter = RentalStatusConverter.class)
 	private RentalStatus status = RentalStatus.INACTIVE;
 	
-//	@Column(name="reader", nullable=false, length=10)
 	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "reader_id")
 	private Reader reader;
-	
-//	@Column(name="BookCopy", nullable=false, length=10)
+
 	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "copy_id")
 	private BookCopy bookCopy;

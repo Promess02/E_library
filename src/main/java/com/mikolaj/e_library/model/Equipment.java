@@ -4,8 +4,8 @@ import java.io.Serializable;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.mikolaj.e_library.Persistence.CustomDateDeserializer;
-import com.mikolaj.e_library.Persistence.CustomDateSerializer;
+import com.mikolaj.e_library.DTO.CustomDateDeserializer;
+import com.mikolaj.e_library.DTO.CustomDateSerializer;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;

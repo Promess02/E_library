@@ -43,7 +43,7 @@ public class Book implements Serializable {
 	private String title;
 	
 	@Column(name="release_date")
-	@JsonFormat(pattern = "yyyy-MM-dd")
+//	@JsonFormat(pattern = "yyyy-MM-dd")
 	@JsonSerialize(using = CustomDateSerializer.class)
 	@JsonDeserialize(using = CustomDateDeserializer.class)
 	private LocalDate releaseDate;

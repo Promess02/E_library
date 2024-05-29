@@ -136,6 +136,7 @@ public class BookController {
     }
 
     /*
+    DZIAŁA
         Zwraca aktywne wypożyczenia dla czytelnika
 
         {
@@ -150,6 +151,7 @@ public class BookController {
     }
 
     /*
+    DZIAŁA
         Przedłuża wypożyczenie o podaną liczbę tygodni
 
         {

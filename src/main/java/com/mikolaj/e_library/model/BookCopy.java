@@ -13,11 +13,12 @@
  */
 package com.mikolaj.e_library.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.mikolaj.e_library.DTO.RentalStatus;
-import com.mikolaj.e_library.Persistence.CustomDateDeserializer;
-import com.mikolaj.e_library.Persistence.CustomDateSerializer;
+import com.mikolaj.e_library.DTO.CustomDateDeserializer;
+import com.mikolaj.e_library.DTO.CustomDateSerializer;
 import com.mikolaj.e_library.Persistence.RentalStatusConverter;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -49,6 +50,9 @@ public class BookCopy implements Serializable {
 	private String shelfPlace;
 	
 	@Column(name="date_of_purchase", nullable=false)
+//	@JsonFormat(pattern = "yyyy-MM-dd")
+	@JsonSerialize(using = CustomDateSerializer.class)
+	@JsonDeserialize(using = CustomDateDeserializer.class)
 	private LocalDate dateOfPurchase = LocalDate.now();
 	
 	@Column(name="quality_status", nullable=false)
@@ -70,6 +74,15 @@ public class BookCopy implements Serializable {
 
 	public BookCopy(Book book){
 		this.book = book;
+	}
+
+	public BookCopy(BookCopy copy){
+		this.rentalStatus = copy.getRentalStatus();
+		this.shelfPlace = copy.getShelfPlace();
+		this.dateOfPurchase = copy.getDateOfPurchase();
+		this.qualityStatus = copy.getQualityStatus();
+		this.book = copy.getBook();
+		this.addedBy = copy.getAddedBy();
 	}
 
 	public BookCopy(String shelfPlace, Book book, WarehouseManager manager){

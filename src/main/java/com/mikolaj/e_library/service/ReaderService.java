@@ -8,6 +8,8 @@ import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
@@ -111,13 +113,13 @@ public class ReaderService {
 
     public ServiceResponse<Page<Book>> getFilteredBooks(BookFilter bookFilter) {
         List<Book> filteredList;
+        List<Book> allBooks = bookRepository.findAll();
+        filteredList = applyFilters(allBooks, bookFilter);
 
-        if (!bookFilter.getFilter().isEmpty()) {
-            filteredList = bookRepository.findByTitleStartingWithIgnoreCase(bookFilter.getFilter());
-        } else {
-            List<Book> allBooks = bookRepository.findAll();
-            filteredList = applyFilters(allBooks, bookFilter);
-        }
+        if(bookFilter.getFilter()!=null)
+            if (!bookFilter.getFilter().isEmpty()) {
+                filteredList = bookRepository.findByTitleStartingWithIgnoreCase(bookFilter.getFilter());
+            }
 
         // Determine pagination parameters
         int start = bookFilter.getPage() * bookFilter.getSize();
@@ -133,22 +135,22 @@ public class ReaderService {
     private List<Book> applyFilters(List<Book> books, BookFilter bookFilter) {
         List<Book> filteredList = books;
 
-        if (!bookFilter.getAuthor().isEmpty()) {
+        if (bookFilter.getAuthor()!=null && !bookFilter.getAuthor().isEmpty()) {
             filteredList = filteredList.stream()
                     .filter(book -> book.getBookAuthor().equals(bookFilter.getAuthor()))
                     .toList();
         }
-        if (!bookFilter.getBookCategory().isEmpty()) {
+        if (bookFilter.getBookCategory()!=null && !bookFilter.getBookCategory().isEmpty()) {
             filteredList = filteredList.stream()
                     .filter(book -> book.getBookCategory().toString().equals(bookFilter.getBookCategory()))
                     .toList();
         }
-        if (!bookFilter.getBookType().isEmpty()) {
+        if (bookFilter.getBookType()!=null && !bookFilter.getBookType().isEmpty()) {
             filteredList = filteredList.stream()
                     .filter(book -> book.getBookType().toString().equals(bookFilter.getBookType()))
                     .toList();
         }
-        if (bookFilter.getMinBookRating() != 0) {
+        if (bookFilter.getMinBookRating()!=null && bookFilter.getMinBookRating() != 0) {
             filteredList = filteredList.stream()
                     .filter(book -> book.getAverageBookRating() >= bookFilter.getMinBookRating())
                     .toList();
@@ -159,8 +161,11 @@ public class ReaderService {
 
     public ServiceResponse<List<NewsPost>> getNewsPostsBetweenDates(DateRange dateRange){
         List<NewsPost> list;
-        if(dateRange!=null)
-        list = newsPostRepository.findNewsPostsByCreateTimeBetween(dateRange.getStartDate(),dateRange.getEndDate());
+        if(dateRange!=null){
+            LocalDateTime startTime = dateRange.getStartDate().atTime(0,0,0);
+            LocalDateTime endTime = dateRange.getEndDate().atTime(23, 59, 59);
+            list = newsPostRepository.findNewsPostsByCreateTimeBetween(startTime,endTime);
+        }
         else list = newsPostRepository.findAll();
         if(list.isEmpty()) return new ServiceResponse<>(Optional.empty(), "No News Posts Found");
         return new ServiceResponse<>(Optional.of(list), "News Posts Found");

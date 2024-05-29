@@ -106,6 +106,11 @@ public class WarehouseManagerController {
         return ResponseUtil.okResponse(serviceResponse.getMessage(), "BookCopy", serviceResponse.getData().get());
     }
 
+    /*
+    {
+        "copyId": 3
+    }
+     */
     @DeleteMapping("/deleteBookCopy")
     public ResponseEntity<?> deleteBookCopy(@RequestBody BookCopy bookCopy) {
         ServiceResponse<BookCopy> serviceResponse = warehouseManagerService.deleteBookCopy(bookCopy);

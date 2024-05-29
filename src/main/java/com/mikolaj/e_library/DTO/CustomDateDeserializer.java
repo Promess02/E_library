@@ -15,6 +15,9 @@ public class CustomDateDeserializer extends JsonDeserializer<LocalDate> {
 
     @Override
     public LocalDate deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException, JsonProcessingException {
+        if (jsonParser.getText() == null) {
+            return null;
+        }
         return LocalDate.parse(jsonParser.getText(), formatter);
     }
 }
