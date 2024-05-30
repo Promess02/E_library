@@ -1,13 +1,13 @@
 package com.mikolaj.e_library.controller;
 
 import com.mikolaj.e_library.DTO.*;
-import com.mikolaj.e_library.model.NewsPost;
-import com.mikolaj.e_library.model.Reader;
-import com.mikolaj.e_library.model.Rental;
-import com.mikolaj.e_library.model.Worker;
+import com.mikolaj.e_library.model.*;
 import com.mikolaj.e_library.repo.*;
 import com.mikolaj.e_library.service.ReaderService;
 import com.mikolaj.e_library.service.WorkerService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -133,6 +133,32 @@ Wypożycza książkę(Book.class) o danym id dla czytelnika z danym id na podan�
         if(!userRepository.existsByEmail(userEmail)) return ResponseUtil.badRequestResponse("No user with given email found");
         List<Rental> rentals = rentalRepository.findAllByReaderUserEmailAndStatus(userEmail, RentalStatus.ACTIVE);
         return  ResponseUtil.okResponse("found rentals", "Rentals: ", rentals);
+    }
+
+    @GetMapping("/getAllRentalsForUser/email={userEmail}")
+    public ResponseEntity<?> getAllRentalsForUser(@PathVariable String userEmail){
+        if(!userRepository.existsByEmail(userEmail)) return ResponseUtil.badRequestResponse("No user with given email found");
+        List<Rental> rentals = rentalRepository.findAllByReaderUserEmail(userEmail);
+        return  ResponseUtil.okResponse("found rentals", "Rentals: ", rentals);
+    }
+
+    /*
+        {
+        "filter": "ada",
+        "filterBy": "title",
+        "page": 0,
+        "size": 3
+        }
+    */
+    @PostMapping("/getAllRentalsForUser/email={userEmail}/paginated")
+    public ResponseEntity<?> getAllRentalsForUserPaginated(@RequestBody Pagination pagination){
+        Page<Rental> rentalsPage;
+        rentalsPage = rentalRepository.findAll(PageRequest.of(pagination.getPage(), pagination.getSize()));
+
+        if (rentalsPage.isEmpty()) {
+            return ResponseUtil.okResponse("no rentals found", "Rentals", Optional.empty());
+        }
+        return ResponseUtil.okResponse("rentals found: ", "Rentals", rentalsPage);
     }
 
 

@@ -12,5 +12,7 @@ public interface RentalRepository extends JpaRepository<Rental, Integer> {
     Optional<List<Rental>> findAllByReader(Reader reader);
     Optional<List<Rental>> findAllByReaderAndStatus(Reader reader, RentalStatus rentalStatus);
     List<Rental> findAllByReaderUserEmailAndStatus(String email, RentalStatus rentalStatus);
+    List<Rental> findAllByReaderUserEmail(String email);
+
 
 }
