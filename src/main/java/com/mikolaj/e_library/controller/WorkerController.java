@@ -150,16 +150,45 @@ Wypożycza książkę(Book.class) o danym id dla czytelnika z danym id na podan�
         "size": 3
         }
     */
-    @PostMapping("/getAllRentalsForUser/email={userEmail}/paginated")
-    public ResponseEntity<?> getAllRentalsForUserPaginated(@RequestBody Pagination pagination){
-        Page<Rental> rentalsPage;
-        rentalsPage = rentalRepository.findAll(PageRequest.of(pagination.getPage(), pagination.getSize()));
+//    @PostMapping("/getAllRentalsForUser/email={userEmail}/paginated")
+//    public ResponseEntity<?> getAllRentalsForUserPaginated(@PathVariable String userEmail, @RequestBody Pagination pagination) {
+//        Page<Rental> rentalsPage = rentalRepository.findByReaderUserEmail(userEmail, PageRequest.of(pagination.getPage(), pagination.getSize()));
+//
+//        if (rentalsPage.isEmpty()) {
+//            return ResponseUtil.okResponse("no rentals found", "Rentals", Optional.empty());
+//        }
+//        return ResponseUtil.okResponse("rentals found: ", "Rentals", rentalsPage);
+//    }
 
+    /*
+        {
+        "filter": "ada",
+        "filterBy": "title",
+        "page": 0,
+        "size": 3
+        }
+    */
+    @PostMapping("/getAllRentalsForUser/email={userEmail}/paginated")
+    public ResponseEntity<?> getAllRentalsForUserPaginated(@PathVariable String userEmail, @RequestBody Pagination pagination) {
+        Page<Rental> rentalsPage;
+        if (pagination.getFilterBy().isEmpty()) {
+            rentalsPage = rentalRepository.findByReaderUserEmail(userEmail, PageRequest.of(pagination.getPage(), pagination.getSize()));
+        }
+        else if (pagination.getFilterBy().equals("active")){
+            rentalsPage = rentalRepository.findByReaderUserEmailAndStatus(userEmail, RentalStatus.ACTIVE ,PageRequest.of(pagination.getPage(), pagination.getSize()));
+        }
+        else if (pagination.getFilterBy().equals("inactive")){
+            rentalsPage = rentalRepository.findByReaderUserEmailAndStatus(userEmail, RentalStatus.INACTIVE ,PageRequest.of(pagination.getPage(), pagination.getSize()));
+        }
+        else {
+            rentalsPage = rentalRepository.findByReaderUserEmail(userEmail, PageRequest.of(pagination.getPage(), pagination.getSize()));
+        }
         if (rentalsPage.isEmpty()) {
             return ResponseUtil.okResponse("no rentals found", "Rentals", Optional.empty());
         }
         return ResponseUtil.okResponse("rentals found: ", "Rentals", rentalsPage);
     }
+
 
 
 }
