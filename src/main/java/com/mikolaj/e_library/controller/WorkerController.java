@@ -128,6 +128,7 @@ Wypożycza książkę(Book.class) o danym id dla czytelnika z danym id na podan�
         return ResponseUtil.okResponse("found news posts", "News posts: ", readers);
     }
 
+    // Zwraca wszystkie rentals dla podanego maila w linku
     @GetMapping("/getRentalsForUser/email={userEmail}")
     public ResponseEntity<?> getActiveRentalsForUser(@PathVariable String userEmail){
         if(!userRepository.existsByEmail(userEmail)) return ResponseUtil.badRequestResponse("No user with given email found");
@@ -135,6 +136,7 @@ Wypożycza książkę(Book.class) o danym id dla czytelnika z danym id na podan�
         return  ResponseUtil.okResponse("found rentals", "Rentals: ", rentals);
     }
 
+    // Zwraca wszystkie ACTIVE rentals dla podanego maila w linku
     @GetMapping("/getAllRentalsForUser/email={userEmail}")
     public ResponseEntity<?> getAllRentalsForUser(@PathVariable String userEmail){
         if(!userRepository.existsByEmail(userEmail)) return ResponseUtil.badRequestResponse("No user with given email found");
@@ -149,25 +151,10 @@ Wypożycza książkę(Book.class) o danym id dla czytelnika z danym id na podan�
         "page": 0,
         "size": 3
         }
+        Działa w ten sposób że podajemy email i dla podanego emaila zwracamy wszystkie rentals, mozemy dodac filterBy w pagination
+        W ten sposob mozemy filtrowac status
     */
-//    @PostMapping("/getAllRentalsForUser/email={userEmail}/paginated")
-//    public ResponseEntity<?> getAllRentalsForUserPaginated(@PathVariable String userEmail, @RequestBody Pagination pagination) {
-//        Page<Rental> rentalsPage = rentalRepository.findByReaderUserEmail(userEmail, PageRequest.of(pagination.getPage(), pagination.getSize()));
-//
-//        if (rentalsPage.isEmpty()) {
-//            return ResponseUtil.okResponse("no rentals found", "Rentals", Optional.empty());
-//        }
-//        return ResponseUtil.okResponse("rentals found: ", "Rentals", rentalsPage);
-//    }
-
-    /*
-        {
-        "filter": "ada",
-        "filterBy": "title",
-        "page": 0,
-        "size": 3
-        }
-    */
+    // POLECAM NIE RUSZAC WYDAJE SIE DOBRZE DZIALAC
     @PostMapping("/getAllRentalsForUser/email={userEmail}/paginated")
     public ResponseEntity<?> getAllRentalsForUserPaginated(@PathVariable String userEmail, @RequestBody Pagination pagination) {
         Page<Rental> rentalsPage;

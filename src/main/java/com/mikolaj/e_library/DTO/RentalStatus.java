@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum RentalStatus {
-    RENTED("Rented"), FREE("Free"), ACTIVE("active"), INACTIVE("inactive"), PROLONGED("prolonged"), OVERDUE("overdue");
+    RENTED("rented"), FREE("free"), RESERVED("reserved"), ACTIVE("active"), INACTIVE("inactive"), PROLONGED("prolonged"), OVERDUE("overdue");
 
     private final String name;
     RentalStatus(String name) {
