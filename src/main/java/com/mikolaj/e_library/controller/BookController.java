@@ -11,6 +11,7 @@ import com.mikolaj.e_library.repo.BookRepository;
 
 import com.mikolaj.e_library.repo.ReaderRepository;
 import com.mikolaj.e_library.service.ReaderService;
+import com.mikolaj.e_library.service.RegistrationService;
 import com.mikolaj.e_library.service.WorkerService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -18,6 +19,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -29,18 +31,21 @@ public class BookController {
     private final ReaderService readerService;
     private final ReaderRepository readerRepository;
     private final WorkerService workerService;
+    private final RegistrationService registrationService;
 
     public BookController(BookRepository bookRepository, ReaderService readerService, BookRatingRepository bookRatingRepository,
-                          ReaderRepository readerRepository, WorkerService workerService) {
+                          ReaderRepository readerRepository, WorkerService workerService, RegistrationService registrationService) {
         this.bookRepository = bookRepository;
         this.readerService = readerService;
         this.bookRatingRepository = bookRatingRepository;
         this.readerRepository = readerRepository;
         this.workerService = workerService;
+        this.registrationService = registrationService;
     }
 
-    @GetMapping("/getAll")
-    public ResponseEntity<?> getBooks(){
+    @GetMapping("/getAll/apiKey={apiKey}")
+    public ResponseEntity<?> getBooks(@PathVariable String apiKey){
+        if(registrationService.handleAuthentication(apiKey, List.of("reader", "worker", "warehouse manager"))) return ResponseUtil.badRequestResponse("Authentication failed");
         ServiceResponse<?> response = new ServiceResponse<Object>(Optional.of(bookRepository.findAll()), "books found");
         if(response.getData().isEmpty()) return ResponseUtil.okResponse("no books found", "Book", Optional.empty());
         return ResponseUtil.okResponse(response.getMessage(), "Books", response.getData().get());
@@ -54,8 +59,9 @@ public class BookController {
         "size": 3
         }
     */
-    @PostMapping("/getAllPaginated")
-    public ResponseEntity<?> getBooks(@RequestBody Pagination pagination){
+    @GetMapping("/getAllPaginated/apiKey={apiKey}")
+    public ResponseEntity<?> getBooks(@RequestBody Pagination pagination, @PathVariable String apiKey){
+        if(registrationService.handleAuthentication(apiKey, List.of("reader"))) return ResponseUtil.badRequestResponse("Authentication failed");
         Page<Book> booksPage;
 
         if (pagination.getFilterBy().isEmpty()) {
@@ -85,8 +91,9 @@ public class BookController {
         "description": "blebleblbel"
        }
      */
-    @PostMapping("/save")
-    public ResponseEntity<?> saveBook(@RequestBody Book book){
+    @PostMapping("/save/apiKey={apiKey}")
+    public ResponseEntity<?> saveBook(@RequestBody Book book, @PathVariable String apiKey){
+        if(registrationService.handleAuthentication(apiKey, List.of("warehouseManager","worker"))) return ResponseUtil.badRequestResponse("Authentication failed");
         ServiceResponse<Book> response = new ServiceResponse<>(Optional.of(bookRepository.save(book)),"book saved");
         if(response.getData().isEmpty()) return ResponseUtil.badRequestResponse("couldn't save book");
         return ResponseUtil.okResponse(response.getMessage(), "Book", response.getData().get());
@@ -97,8 +104,9 @@ public class BookController {
         "bookId": 9,
        }
     */
-    @DeleteMapping("/delete")
-    public ResponseEntity<?> deleteBook(@RequestBody Book book){
+    @DeleteMapping("/delete/apiKey={apiKey}")
+    public ResponseEntity<?> deleteBook(@RequestBody Book book, @PathVariable String apiKey){
+        if(registrationService.handleAuthentication(apiKey, List.of("warehouseManager","worker"))) return ResponseUtil.badRequestResponse("Authentication failed");
         if (bookRepository.findById(book.getBookId()).isPresent()) {
             bookRepository.delete(book);
             return ResponseUtil.okResponse("book deleted", "Book", book);
@@ -114,8 +122,9 @@ public class BookController {
             "rentalInWeeks": 5
         }
      */
-    @PostMapping("/rent")
-    public ResponseEntity<?> rentBook(@RequestBody RentalForm rentalForm){
+    @PostMapping("/rent/apiKey={apiKey}")
+    public ResponseEntity<?> rentBook(@RequestBody RentalForm rentalForm, @PathVariable String apiKey){
+        if(registrationService.handleAuthentication(apiKey, List.of("reader","worker"))) return ResponseUtil.badRequestResponse("Authentication failed");
         ServiceResponse<?> response = readerService.bookRental(rentalForm);
         if(response.getData().isEmpty()) return ResponseUtil.badRequestResponse(response.getMessage());
         return ResponseUtil.okResponse(response.getMessage(), "Rental", response.getData().get());
@@ -128,8 +137,9 @@ public class BookController {
             "readerId": 4
         }
      */
-    @GetMapping("/getRentals")
-    public ResponseEntity<?> getAllRentalsForReader(@RequestBody Reader reader){
+    @GetMapping("/getRentals/apiKey={apiKey}")
+    public ResponseEntity<?> getAllRentalsForReader(@RequestBody Reader reader, @PathVariable String apiKey){
+        if(registrationService.handleAuthentication(apiKey, List.of("reader","worker"))) return ResponseUtil.badRequestResponse("Authentication failed");
         ServiceResponse<?> response = readerService.getAllRentalsForReader(reader);
         if(response.getData().isEmpty()) return ResponseUtil.badRequestResponse(response.getMessage());
         return ResponseUtil.okResponse(response.getMessage(), "Rental", response.getData().get());
@@ -143,8 +153,9 @@ public class BookController {
             "readerId": 6
         }
      */
-    @GetMapping("/getActiveRentals")
-    public ResponseEntity<?> getActiveRentalsForReader(@RequestBody Reader reader){
+    @GetMapping("/getActiveRentals/apiKey={apiKey}")
+    public ResponseEntity<?> getActiveRentalsForReader(@RequestBody Reader reader, @PathVariable String apiKey){
+        if(registrationService.handleAuthentication(apiKey, List.of("reader","worker"))) return ResponseUtil.badRequestResponse("Authentication failed");
         ServiceResponse<?> response = readerService.getAllActiveRentalsForReader(reader);
         if(response.getData().isEmpty()) return ResponseUtil.badRequestResponse(response.getMessage());
         return ResponseUtil.okResponse(response.getMessage(), "Rental", response.getData().get());
@@ -160,8 +171,9 @@ public class BookController {
         }
 
      */
-    @PatchMapping("/prolongateRental")
-    public ResponseEntity<?> prolongateRental(@RequestBody ProlongateForm prolongateForm){
+    @PatchMapping("/prolongateRental/apiKey={apiKey}")
+    public ResponseEntity<?> prolongateRental(@RequestBody ProlongateForm prolongateForm, @PathVariable String apiKey){
+        if(registrationService.handleAuthentication(apiKey, List.of("reader","worker"))) return ResponseUtil.badRequestResponse("Authentication failed");
         ServiceResponse<?> response = readerService.prolongateRental(prolongateForm);
         if(response.getData().isEmpty()) return ResponseUtil.badRequestResponse(response.getMessage());
         return ResponseUtil.okResponse(response.getMessage(), "Rental", response.getData().get());
@@ -185,8 +197,9 @@ public class BookController {
         W przypadku, gdy w polu "filter" jest wartość to pozostałe pola z JSONA są ignorowane,
         nie wszystkie filtry muszą być obecne.
      */
-    @GetMapping("/getFilteredBooks")
-    public ResponseEntity<?> getFilteredBooks(@RequestBody BookFilter bookFilter){
+    @GetMapping("/getFilteredBooks/apiKey={apiKey}")
+    public ResponseEntity<?> getFilteredBooks(@RequestBody BookFilter bookFilter, @PathVariable String apiKey){
+        if(registrationService.handleAuthentication(apiKey, List.of("reader","worker","warehouse manager"))) return ResponseUtil.badRequestResponse("Authentication failed");
         ServiceResponse<Page<Book>> response = readerService.getFilteredBooks(bookFilter);
         Optional<Page<Book>> bookPage = response.getData();
         if(bookPage.isEmpty()) return ResponseUtil.badRequestResponse(response.getMessage());
@@ -200,8 +213,9 @@ public class BookController {
             "readerId": 4
            }
      */
-    @PostMapping("/addOrUpdateBookRating")
-    public ResponseEntity<?> addOrUpdateBookRating(@RequestBody BookRatingForm bookRatingForm){
+    @PostMapping("/addOrUpdateBookRating/apiKey={apiKey}")
+    public ResponseEntity<?> addOrUpdateBookRating(@RequestBody BookRatingForm bookRatingForm, @PathVariable String apiKey){
+        if(registrationService.handleAuthentication(apiKey, List.of("reader"))) return ResponseUtil.badRequestResponse("Authentication failed");
         ServiceResponse<?> response = readerService.addOrUpdateBookRating(bookRatingForm);
         if(response.getData().isEmpty()) return ResponseUtil.badRequestResponse(response.getMessage());
         return ResponseUtil.okResponse(response.getMessage(), "Rating", response.getData().get());
@@ -213,11 +227,10 @@ public class BookController {
             "endDate": "yyyy-mm-dd"
         }
 
-        UWAGA: nie testowałem czy rzeczywiście dobrze konwertuje tak podaną datę w ciele żądania,
-        ale prawdopodobnie jeszcze nie :(
      */
-    @GetMapping("/getNewsPosts")
-    public ResponseEntity<?> getAllNewsPosts(@RequestBody DateRange dateRange){
+    @GetMapping("/getNewsPosts/apiKey={apiKey}")
+    public ResponseEntity<?> getAllNewsPosts(@RequestBody DateRange dateRange, @PathVariable String apiKey){
+        if(registrationService.handleAuthentication(apiKey, List.of("reader","worker","warehouse manager", "employee manager"))) return ResponseUtil.badRequestResponse("Authentication failed");
         ServiceResponse<?> response = readerService.getNewsPostsBetweenDates(dateRange);
         if(response.getData().isEmpty()) return ResponseUtil.badRequestResponse(response.getMessage());
         return ResponseUtil.okResponse(response.getMessage(), "Posts", response.getData().get());
@@ -230,8 +243,9 @@ public class BookController {
             "readerId": 5
         }
      */
-    @GetMapping("/getRatingForBook")
-    public ResponseEntity<?> getRatingForBook(@RequestBody BookRatingForm bookRatingForm){
+    @GetMapping("/getRatingForBook/apiKey={apiKey}")
+    public ResponseEntity<?> getRatingForBook(@RequestBody BookRatingForm bookRatingForm, @PathVariable String apiKey){
+        if(registrationService.handleAuthentication(apiKey, List.of("reader","worker","warehouse manager"))) return ResponseUtil.badRequestResponse("Authentication failed");
         Book book;
         Reader reader;
         if(bookRepository.existsById(bookRatingForm.getBookId())) book =

@@ -5,9 +5,12 @@ import com.mikolaj.e_library.DTO.ServiceResponse;
 import com.mikolaj.e_library.DTO.WorkerRegistrationForm;
 import com.mikolaj.e_library.model.*;
 import com.mikolaj.e_library.repo.*;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class RegistrationService {
@@ -16,14 +19,16 @@ public class RegistrationService {
     private final WorkerRepository workerRepository;
     private final WarehouseManagerRepository warehouseManagerRepository;
     private final EmployeeManagerRepository employeeManagerRepository;
+    private ApiKeyRepository apiKeyRepository;
 
     public RegistrationService(UserRepository userRepository, ReaderRepository readerRepository, WorkerRepository workerRepository,
-                               WarehouseManagerRepository warehouseManagerRepository, EmployeeManagerRepository employeeManagerRepository) {
+                               WarehouseManagerRepository warehouseManagerRepository, EmployeeManagerRepository employeeManagerRepository, ApiKeyRepository apiKeyRepository) {
         this.userRepository = userRepository;
         this.readerRepository = readerRepository;
         this.workerRepository = workerRepository;
         this.warehouseManagerRepository = warehouseManagerRepository;
         this.employeeManagerRepository = employeeManagerRepository;
+        this.apiKeyRepository = apiKeyRepository;
     }
 
     public ServiceResponse<Reader> registerReader(User user) {
@@ -176,6 +181,40 @@ public class RegistrationService {
         if(warehouseManagerRepository.existsByUserId(id))
             return new ServiceResponse<>(Optional.empty(), "User with given id is a warehouse Manager");
         return new ServiceResponse<>(Optional.empty(), "ok");
+    }
+
+        public String generateApiKey() {
+            return UUID.randomUUID().toString();
+        }
+
+        @Transactional
+        public void saveApiKey(int userId, String apiKey, String workerType) {
+            ApiKey key = new ApiKey();
+            key.setUserId(userId);
+            key.setApiKey(apiKey);
+            key.setUserType(workerType);
+            apiKeyRepository.deleteAllByUserIdAndStatus(userId, "active");
+            apiKeyRepository.save(key);
+        }
+
+        /*
+            Do ustawienia sesji dla użytkownika na zatrzymaną. Ustawia status sesji na "terminated"
+         */
+        public void terminateSession(String apiKey){
+            Optional<ApiKey> apiKeyOptional =  apiKeyRepository.findByApiKey(apiKey);
+            apiKeyOptional.ifPresent(key -> key.setStatus("terminated"));
+            apiKeyRepository.save(apiKeyOptional.get());
+        }
+
+        public int authenticateByApiKey(String apiKey, String userType){
+            return apiKeyRepository.findByApiKeyAndStatusAndUserType(apiKey, "active",userType)
+                    .map(ApiKey::getUserId)
+                    .orElse(-1);
+        }
+
+    public boolean handleAuthentication(String apiKey, List<String> userTypes){
+        Optional<ApiKey> optionalApiKey = apiKeyRepository.findByApiKeyAndStatus(apiKey,"active");
+        return !(optionalApiKey.isPresent() && userTypes.contains(optionalApiKey.get().getUserType()));
     }
 
 }

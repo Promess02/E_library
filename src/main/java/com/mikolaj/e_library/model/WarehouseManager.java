@@ -32,7 +32,6 @@ public class WarehouseManager implements Serializable {
 	@Column(name="ware_man_id", nullable=false, unique=true, length=10)
 	@Id	
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	//@org.hibernate.annotations.GenericGenerator(name="COM_MIKOLAJ_WAREHOUSEMANAGER_WAREMANID_GENERATOR", strategy="identity")
 	private int wareManId;
 	
 	@Column(name="monthly_pay", nullable=true, length=10)

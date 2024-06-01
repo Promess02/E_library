@@ -4,12 +4,15 @@ import com.mikolaj.e_library.DTO.LoginForm;
 import com.mikolaj.e_library.DTO.ResponseUtil;
 import com.mikolaj.e_library.DTO.ServiceResponse;
 import com.mikolaj.e_library.DTO.WorkerRegistrationForm;
-import com.mikolaj.e_library.model.Reader;
-import com.mikolaj.e_library.model.User;
+import com.mikolaj.e_library.model.*;
 import com.mikolaj.e_library.service.LoginComponent;
 import com.mikolaj.e_library.service.RegistrationService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 
 @RestController
@@ -89,14 +92,15 @@ public class UserController {
         "monthlyPay": 2345
     }
      */
-    @PostMapping("/registerWorker")
-    public ResponseEntity<?> registerWorker(@RequestBody WorkerRegistrationForm workerRegistrationForm){
+    @PostMapping("/registerWorker/apiKey={apiKey}")
+    public ResponseEntity<?> registerWorker(@RequestBody WorkerRegistrationForm workerRegistrationForm, @PathVariable String apiKey){
+        if(registrationService.handleAuthentication(apiKey, List.of("employee Manager"))) return ResponseUtil.badRequestResponse("Authentication failed");
         ServiceResponse<?> response;
         if(workerRegistrationForm.getWorkerType().equalsIgnoreCase("worker")){
             response = registrationService.registerWorker(workerRegistrationForm);
-        } else if(workerRegistrationForm.getWorkerType().equalsIgnoreCase("warehouse Manager")){
+        } else if(workerRegistrationForm.getWorkerType().equalsIgnoreCase("warehouse manager")){
             response = registrationService.registerWarehouseManager(workerRegistrationForm);
-        } else if(workerRegistrationForm.getWorkerType().equalsIgnoreCase("employee Manager")){
+        } else if(workerRegistrationForm.getWorkerType().equalsIgnoreCase("employee manager")){
             response = registrationService.registerEmployeeManager(workerRegistrationForm);
         } else {
             return ResponseUtil.badRequestResponse("incorrect worker type provided");
@@ -106,32 +110,60 @@ public class UserController {
     }
 
     /* Loguje wszystkie typy użytkowników.
-    Podobnie do poprzedniego trzeba podać w polu "userType" jeden z następujących:
-     worker, reader, warehouse Manager, employee Manager
 
         {
             "email": "miko@wp.pl",
             "password": "tajne_haslo",
-            "userType": "worker"
         }
+
+        Zwraca teraz dane użytkownika pod "user", typ użytkownika pod "userType": worker, reader, employee manager, warehouse manager
+        zwraca klucz api pod "apiKey".
+
      */
     @GetMapping("/login")
     public ResponseEntity<?> loginUsers(@RequestBody LoginForm loginForm){
         ServiceResponse<?> response;
         String userType = loginComponent.checkUser(loginForm.getEmail());
+        int generatedId;
 
         switch (userType){
-            case "worker" -> response = registrationService.loginWorker(loginForm);
-            case "reader" -> response = registrationService.loginReader(loginForm);
-            case "employee manager" -> response = registrationService.loginEmployeeManager(loginForm);
-            case "warehouse manager" -> response = registrationService.loginWarehouseManager(loginForm);
+            case "worker" -> {
+                response = registrationService.loginWorker(loginForm);
+                Worker worker = (Worker) response.getData().get();
+                generatedId = worker.getUser().getId();
+            }
+            case "reader" ->{
+                response = registrationService.loginReader(loginForm);
+                Reader reader = (Reader) response.getData().get();
+                generatedId = reader.getUser().getId();
+            }
+            case "employee manager" -> {
+                response = registrationService.loginEmployeeManager(loginForm);
+                EmployeeManager manager = (EmployeeManager) response.getData().get();
+                generatedId = manager.getUser().getId();
+            }
+            case "warehouse manager" -> {
+                response = registrationService.loginWarehouseManager(loginForm);
+                WarehouseManager warehouseManager = (WarehouseManager) response.getData().get();
+                generatedId = warehouseManager.getUser().getId();
+            }
             default -> {
                 return ResponseUtil.badRequestResponse("No user with email registered");
             }
         }
-        if(response.getData().isEmpty()) return ResponseUtil.badRequestResponse(response.getMessage());
-        return ResponseUtil.okResponse(response.getMessage(),"User", response.getData());
-    }
 
+        if(response.getData().isEmpty()) return ResponseUtil.badRequestResponse(response.getMessage());
+
+        String apiKey = registrationService.generateApiKey();
+        registrationService.saveApiKey(generatedId, apiKey, userType);
+
+        // Return response with API key
+        Map<String, Object> responseData = new HashMap<>();
+        responseData.put("user", response.getData());
+        responseData.put("userType", userType);
+        responseData.put("apiKey", apiKey);
+
+        return ResponseUtil.okResponse(response.getMessage(), "User", responseData);
+    }
 
 }

@@ -7,6 +7,7 @@ import com.mikolaj.e_library.model.EmployeeManager;
 import com.mikolaj.e_library.model.WarehouseManager;
 import com.mikolaj.e_library.model.Worker;
 import com.mikolaj.e_library.service.EmployeeManagerService;
+import com.mikolaj.e_library.service.RegistrationService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,20 +18,24 @@ import java.util.List;
 @CrossOrigin(origins = "http://localhost:3000")
 public class EmployeeManagerController {
     private EmployeeManagerService employeeManagerService;
+    private RegistrationService registrationService;
 
-    public EmployeeManagerController(EmployeeManagerService employeeManagerService) {
+    public EmployeeManagerController(EmployeeManagerService employeeManagerService, RegistrationService registrationService) {
         this.employeeManagerService = employeeManagerService;
+        this.registrationService = registrationService;
     }
 
-    @GetMapping("/getAllWorkers")
-    public ResponseEntity<?> getAllWorkers(){
+    @GetMapping("/getAllWorkers/apiKey={apiKey}")
+    public ResponseEntity<?> getAllWorkers(@PathVariable String apiKey){
+        if(registrationService.handleAuthentication(apiKey, List.of("employee manager"))) return ResponseUtil.badRequestResponse("Authentication failed");
         ServiceResponse<List<Worker>> response = employeeManagerService.getAllWorkers();
         if(response.getData().isEmpty()) return ResponseUtil.badRequestResponse(response.getMessage());
         return ResponseUtil.okResponse(response.getMessage(), "Workers", response.getData());
     }
 
-    @GetMapping("/getAllWarehouseManagers")
-    public ResponseEntity<?> getAllWarehouseManagers() {
+    @GetMapping("/getAllWarehouseManagers/apiKey={apiKey}")
+    public ResponseEntity<?> getAllWarehouseManagers(@PathVariable String apiKey) {
+        if(registrationService.handleAuthentication(apiKey, List.of("employee manager"))) return ResponseUtil.badRequestResponse("Authentication failed");
         ServiceResponse<List<WarehouseManager>> response = employeeManagerService.getAllWarehouseManagers();
         if (response.getData().isEmpty()) {
             return ResponseUtil.badRequestResponse(response.getMessage());
@@ -46,8 +51,9 @@ public class EmployeeManagerController {
             "address": "Kochanów Wieniawski 23a"
         }
      */
-    @PatchMapping("/updateWorker")
-    public ResponseEntity<?> updateWorker(@RequestBody Worker worker) {
+    @PatchMapping("/updateWorker/apiKey={apiKey}")
+    public ResponseEntity<?> updateWorker(@RequestBody Worker worker, @PathVariable String apiKey) {
+        if(registrationService.handleAuthentication(apiKey, List.of("employee manager"))) return ResponseUtil.badRequestResponse("Authentication failed");
         ServiceResponse<Worker> response = employeeManagerService.updateWorker(worker);
         if (response.getData().isEmpty()) {
             return ResponseUtil.badRequestResponse(response.getMessage());
@@ -63,8 +69,9 @@ public class EmployeeManagerController {
         "address": "Kochanów Wieniawski 23a"
     }
  */
-    @PatchMapping("/updateWarehouseManager")
-    public ResponseEntity<?> updateWarehouseManager(@RequestBody WarehouseManager warehouseManager) {
+    @PatchMapping("/updateWarehouseManager/apiKey={apiKey}")
+    public ResponseEntity<?> updateWarehouseManager(@RequestBody WarehouseManager warehouseManager, @PathVariable String apiKey) {
+        if(registrationService.handleAuthentication(apiKey, List.of("employee manager"))) return ResponseUtil.badRequestResponse("Authentication failed");
         ServiceResponse<WarehouseManager> response = employeeManagerService.updateWarehouseManager(warehouseManager);
         if (response.getData().isEmpty()) {
             return ResponseUtil.badRequestResponse(response.getMessage());
@@ -76,8 +83,9 @@ public class EmployeeManagerController {
         "workerId": 2
     }
     */
-    @DeleteMapping("/deleteWorker")
-    public ResponseEntity<?> deleteWorker(@RequestBody Worker worker) {
+    @DeleteMapping("/deleteWorker/apiKey={apiKey}")
+    public ResponseEntity<?> deleteWorker(@RequestBody Worker worker, @PathVariable String apiKey) {
+        if(registrationService.handleAuthentication(apiKey, List.of("employee manager"))) return ResponseUtil.badRequestResponse("Authentication failed");
         ServiceResponse<Worker> response = employeeManagerService.deleteWorker(worker);
         if (response.getData().isEmpty()) {
             return ResponseUtil.badRequestResponse(response.getMessage());
@@ -89,8 +97,9 @@ public class EmployeeManagerController {
         "wareManId":2
     }
  */
-    @DeleteMapping("/deleteWarehouseManager")
-    public ResponseEntity<?> deleteWarehouseManager(@RequestBody WarehouseManager warehouseManager) {
+    @DeleteMapping("/deleteWarehouseManager/apiKey={apiKey}")
+    public ResponseEntity<?> deleteWarehouseManager(@RequestBody WarehouseManager warehouseManager, @PathVariable String apiKey) {
+        if(registrationService.handleAuthentication(apiKey, List.of("employee manager"))) return ResponseUtil.badRequestResponse("Authentication failed");
         ServiceResponse<WarehouseManager> response = employeeManagerService.deleteWarehouseManager(warehouseManager);
         if (response.getData().isEmpty()) {
             return ResponseUtil.badRequestResponse(response.getMessage());
@@ -103,8 +112,9 @@ public class EmployeeManagerController {
     "monthlyPay": 5000
 }
  */
-    @PatchMapping("/changeWorkerMonthlyPay")
-    public ResponseEntity<?> changeWorkerMonthlyPay(@RequestBody PayRiseForm payRiseForm) {
+    @PatchMapping("/changeWorkerMonthlyPay/apiKey={apiKey}")
+    public ResponseEntity<?> changeWorkerMonthlyPay(@RequestBody PayRiseForm payRiseForm, @PathVariable String apiKey) {
+        if(registrationService.handleAuthentication(apiKey, List.of("employee manager"))) return ResponseUtil.badRequestResponse("Authentication failed");
         ServiceResponse<Worker> response = employeeManagerService.changeWorkerMonthlyPay(payRiseForm);
         if (response.getData().isEmpty()) {
             return ResponseUtil.badRequestResponse(response.getMessage());
@@ -118,8 +128,9 @@ public class EmployeeManagerController {
             "monthlyPay": 5000
     }
      */
-    @PatchMapping("/changeWarehouseManagerMonthlyPay")
-    public ResponseEntity<?> changeWarehouseManagerMonthlyPay(@RequestBody PayRiseForm payRiseForm) {
+    @PatchMapping("/changeWarehouseManagerMonthlyPay/apiKey={apiKey}")
+    public ResponseEntity<?> changeWarehouseManagerMonthlyPay(@RequestBody PayRiseForm payRiseForm, @PathVariable String apiKey) {
+        if(registrationService.handleAuthentication(apiKey, List.of("employee manager"))) return ResponseUtil.badRequestResponse("Authentication failed");
         ServiceResponse<WarehouseManager> response = employeeManagerService.changeWarehouseManagerMonthlyPay(payRiseForm);
         if (response.getData().isEmpty()) {
             return ResponseUtil.badRequestResponse(response.getMessage());
