@@ -120,7 +120,7 @@ public class UserController {
         zwraca klucz api pod "apiKey".
 
      */
-    @GetMapping("/login")
+    @PostMapping("/login")
     public ResponseEntity<?> loginUsers(@RequestBody LoginForm loginForm){
         ServiceResponse<?> response;
         String userType = loginComponent.checkUser(loginForm.getEmail());
