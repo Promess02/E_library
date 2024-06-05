@@ -159,6 +159,34 @@ public class ReaderService {
         return filteredList;
     }
 
+    public ServiceResponse<BookCopy> reserveBook(int bookId, int readerId){
+        Optional<Reader> reader = readerRepository.findById(readerId);
+        if(reader.isEmpty()) return new ServiceResponse<>(Optional.empty(),"Reader not found");
+        Optional<Book> book = bookRepository.findById(bookId);
+        if(book.isEmpty()) return new ServiceResponse<>(Optional.empty(), "Book not found");
+        List<BookCopy> copies = bookCopyRepository.findBookCopiesByBook(book.get());
+        BookCopy reservedCopy = new BookCopy();
+        for(BookCopy copy: copies){
+            if(copy.getRentalStatus().equals(RentalStatus.FREE)){
+                copy.setRentalStatus(RentalStatus.RESERVED);
+                copy.setReader(reader.get());
+                reservedCopy = copy;
+                break;
+            }
+        }
+        if(!reservedCopy.getRentalStatus().equals(RentalStatus.RESERVED))
+            return new ServiceResponse<>(Optional.empty(), "No free book copies found");
+        bookCopyRepository.save(reservedCopy);
+        return new ServiceResponse<>(Optional.of(reservedCopy), "Book copy reserved");
+    }
+
+    public ServiceResponse<List<BookCopy>> getReservedCopiesForReader(int readerId){
+        Optional<Reader> reader = readerRepository.findById(readerId);
+        if(reader.isEmpty()) return new ServiceResponse<>(Optional.empty(), "Reader not found");
+        List<BookCopy> copies = bookCopyRepository.findBookCopiesByReaderAndRentalStatus(reader.get(), RentalStatus.RESERVED);
+        return new ServiceResponse<>(Optional.of(copies), "ReservedCopiesFound");
+    }
+
     public ServiceResponse<List<NewsPost>> getNewsPostsBetweenDates(DateRange dateRange){
         List<NewsPost> list;
         if(dateRange!=null){

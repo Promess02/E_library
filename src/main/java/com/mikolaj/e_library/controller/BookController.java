@@ -1,10 +1,7 @@
 package com.mikolaj.e_library.controller;
 
 import com.mikolaj.e_library.DTO.*;
-import com.mikolaj.e_library.model.Book;
-import com.mikolaj.e_library.model.BookRating;
-import com.mikolaj.e_library.model.Reader;
-import com.mikolaj.e_library.model.Rental;
+import com.mikolaj.e_library.model.*;
 import com.mikolaj.e_library.repo.BookCopyRepository;
 import com.mikolaj.e_library.repo.BookRatingRepository;
 import com.mikolaj.e_library.repo.BookRepository;
@@ -76,6 +73,32 @@ public class BookController {
             return ResponseUtil.okResponse("no books found", "Books", Optional.empty());
         }
         return ResponseUtil.okResponse("books found: ", "Books", booksPage);
+    }
+
+    /*
+        {
+        "bookId": 2,
+        "readerId": 4
+        }
+     */
+    @PatchMapping("/reserveBook/apiKey={apiKey}")
+    public ResponseEntity<?> reserveBook(@RequestBody BookReservation reservation, @PathVariable String apiKey){
+        if(registrationService.handleAuthentication(apiKey, List.of("reader", "worker"))) return ResponseUtil.badRequestResponse("Authentication failed");
+        ServiceResponse<BookCopy> response = readerService.reserveBook(reservation.getBookId(), reservation.getReaderId());
+        if(response.getData().isEmpty()) return  ResponseUtil.badRequestResponse(response.getMessage());
+        return ResponseUtil.okResponse(response.getMessage(), "BookCopy", response.getData());
+    }
+    /*
+    {
+    "readerId": 3
+    }
+     */
+    @GetMapping("/getAllReserved/apiKey={apiKey}")
+    public ResponseEntity<?> getAllReservedForReader(@RequestBody BookReservation reservation, @PathVariable String apiKey){
+        if(registrationService.handleAuthentication(apiKey, List.of("reader", "worker"))) return ResponseUtil.badRequestResponse("Authentication failed");
+        ServiceResponse<List<BookCopy>> response = readerService.getReservedCopiesForReader(reservation.getReaderId());
+        if(response.getData().isEmpty()) return ResponseUtil.badRequestResponse(response.getMessage());
+        return ResponseUtil.okResponse(response.getMessage(), "Copy list", response.getData());
     }
 
     /*
