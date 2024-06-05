@@ -118,7 +118,7 @@ Wypożycza książkę(Book.class) o danym id dla czytelnika z danym id na podan�
     W url żądania podajemy id posta do usunięcia. Przykład url:
     http://localhost:8080/worker/deleteNewsPost/post=1
  */
-    @DeleteMapping("/deleteNewsPost/postId={postId}/apikKey={apiKey}")
+    @DeleteMapping("/deleteNewsPost/postId={postId}/apiKey={apiKey}")
     public ResponseEntity<?> deleteNewsPost(@PathVariable int postId, @PathVariable String apiKey){
         if(registrationService.handleAuthentication(apiKey, List.of("worker"))) return ResponseUtil.badRequestResponse("Authentication failed");
         ServiceResponse<?> response = workerService.deleteNewsPost(postId);
