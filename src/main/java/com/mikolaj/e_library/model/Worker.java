@@ -38,10 +38,10 @@ public class Worker implements Serializable {
 	@Column(name="monthly_pay", nullable=true, length=10)
 	private int monthlyPay;
 
-	@Column(name = "pesel", nullable = false)
+	@Column(name = "pesel")
 	private String pesel;
 
-	@Column(name = "pay_account_number", nullable = false)
+	@Column(name = "pay_account_number")
 	private String payAccountNumber;
 
 	@Column(name = "address")

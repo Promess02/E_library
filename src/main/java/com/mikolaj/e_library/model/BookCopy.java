@@ -42,20 +42,20 @@ public class BookCopy implements Serializable {
 	//@org.hibernate.annotations.GenericGenerator(name="COM_MIKOLAJ_BOOKCOPY_COPYID_GENERATOR", strategy="identity")
 	private int copyId;
 	
-	@Column(name="rental_status", nullable=false)
+	@Column(name="rental_status")
 	@Convert(converter = RentalStatusConverter.class)
 	private RentalStatus rentalStatus = RentalStatus.FREE;
 	
 	@Column(name="shelf_place")
 	private String shelfPlace;
 	
-	@Column(name="date_of_purchase", nullable=false)
+	@Column(name="date_of_purchase")
 //	@JsonFormat(pattern = "yyyy-MM-dd")
 	@JsonSerialize(using = CustomDateSerializer.class)
 	@JsonDeserialize(using = CustomDateDeserializer.class)
 	private LocalDate dateOfPurchase = LocalDate.now();
 	
-	@Column(name="quality_status", nullable=false)
+	@Column(name="quality_status")
 	private String qualityStatus = "New";
 	
 //	@Column(name="book", nullable=false, length=10)
