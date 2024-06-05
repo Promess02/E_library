@@ -93,7 +93,7 @@ public class BookController {
     "readerId": 3
     }
      */
-    @GetMapping("/getAllReserved/apiKey={apiKey}")
+    @PostMapping("/getAllReserved/apiKey={apiKey}")
     public ResponseEntity<?> getAllReservedForReader(@RequestBody BookReservation reservation, @PathVariable String apiKey){
         if(registrationService.handleAuthentication(apiKey, List.of("reader", "worker"))) return ResponseUtil.badRequestResponse("Authentication failed");
         ServiceResponse<List<BookCopy>> response = readerService.getReservedCopiesForReader(reservation.getReaderId());
