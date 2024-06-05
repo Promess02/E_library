@@ -56,7 +56,7 @@ public class BookController {
         "size": 3
         }
     */
-    @GetMapping("/getAllPaginated/apiKey={apiKey}")
+    @PostMapping("/getAllPaginated/apiKey={apiKey}")
     public ResponseEntity<?> getBooks(@RequestBody Pagination pagination, @PathVariable String apiKey){
         if(registrationService.handleAuthentication(apiKey, List.of("reader"))) return ResponseUtil.badRequestResponse("Authentication failed");
         Page<Book> booksPage;
