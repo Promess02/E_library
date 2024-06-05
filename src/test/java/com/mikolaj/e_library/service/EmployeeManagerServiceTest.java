@@ -86,33 +86,41 @@ class EmployeeManagerServiceTest {
     }
 
     @Test
-    void updateWorker() {
-        Worker worker = new Worker();
-        worker.setWorkerId(1);
-
-        when(workerRepository.existsById(worker.getWorkerId())).thenReturn(true);
-        when(workerRepository.save(any(Worker.class))).thenReturn(worker);
-
-        ServiceResponse<Worker> response = employeeManagerService.updateWorker(worker);
-
-        assertTrue(response.getData().isPresent());
-        assertEquals("worker updated", response.getMessage());
-        verify(workerRepository, times(1)).save(worker);
-    }
-
-    @Test
     void updateWarehouseManager() {
-        WarehouseManager manager = new WarehouseManager();
-        manager.setWareManId(1);
+        WarehouseManager warehouseManager = new WarehouseManager();
+        warehouseManager.setWareManId(1);;
+        WarehouseManager updateWarehouseManager = new WarehouseManager(1245);
+        updateWarehouseManager.setWareManId(1);
 
-        when(warehouseManagerRepository.existsById(manager.getWareManId())).thenReturn(true);
-        when(warehouseManagerRepository.save(any(WarehouseManager.class))).thenReturn(manager);
+        when(warehouseManagerRepository.findById(warehouseManager.getWareManId())).thenReturn(Optional.of(warehouseManager));
+        when(warehouseManagerRepository.save(any(WarehouseManager.class))).thenReturn(updateWarehouseManager);
 
-        ServiceResponse<WarehouseManager> response = employeeManagerService.updateWarehouseManager(manager);
+        ServiceResponse<WarehouseManager> response = employeeManagerService.updateWarehouseManager(updateWarehouseManager);
 
         assertTrue(response.getData().isPresent());
         assertEquals("warehouseManager updated", response.getMessage());
-        verify(warehouseManagerRepository, times(1)).save(manager);
+        assertEquals(updateWarehouseManager.getMonthlyPay(), response.getData().get().getMonthlyPay());
+        verify(warehouseManagerRepository, times(1)).findById(1);
+        verify(warehouseManagerRepository, times(1)).save(any());
+    }
+
+    @Test
+    void updateWorker() {
+        Worker worker = new Worker();
+        worker.setWorkerId(1);
+        Worker updateWorker = new Worker(1245);
+        updateWorker.setWorkerId(1);
+
+        when(workerRepository.findById(worker.getWorkerId())).thenReturn(Optional.of(worker));
+        when(workerRepository.save(any(Worker.class))).thenReturn(updateWorker);
+
+        ServiceResponse<Worker> response = employeeManagerService.updateWorker(updateWorker);
+
+        assertTrue(response.getData().isPresent());
+        assertEquals("worker updated", response.getMessage());
+        assertEquals(updateWorker.getMonthlyPay(), response.getData().get().getMonthlyPay());
+        verify(workerRepository, times(1)).findById(1);
+        verify(workerRepository, times(1)).save(any());
     }
 
     @Test
@@ -205,7 +213,7 @@ class EmployeeManagerServiceTest {
         ServiceResponse<WarehouseManager> response = employeeManagerService.updateWarehouseManager(manager);
 
         assertTrue(response.getData().isEmpty());
-        assertEquals("warehouseManager not found", response.getMessage());
+        assertEquals("warehouse manager not found", response.getMessage());
         verify(warehouseManagerRepository, never()).save(any(WarehouseManager.class));
     }
 

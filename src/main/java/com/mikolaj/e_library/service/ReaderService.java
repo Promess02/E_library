@@ -6,6 +6,7 @@ import com.mikolaj.e_library.model.*;
 import com.mikolaj.e_library.repo.*;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -61,12 +62,11 @@ public class ReaderService {
         if(copies.isEmpty()) return new ServiceResponse<>(Optional.empty(), "Book Copies Not Found");
 
 
-        BookCopy rentedCopy = null;
-        for(BookCopy copy : copies)
-            if(copy.getRentalStatus().equals(RentalStatus.FREE)){
-                rentedCopy = copy;
-                break;
-            }
+        BookCopy rentedCopy = copies.stream()
+                .filter(copy -> copy.getRentalStatus().equals(RentalStatus.FREE))
+                .findFirst()
+                .orElse(null);
+
         if(rentedCopy==null)
             return new ServiceResponse<>(Optional.empty(), "No free copies found!");
 
@@ -92,12 +92,13 @@ public class ReaderService {
         return new ServiceResponse<>(Optional.of(mathcingList), "Active rentals found");
     }
 
+    @Transactional
     public ServiceResponse<Rental> prolongateRental(ProlongateForm prolongateForm){
         int prolongationInWeeks = prolongateForm.getProlongationInWeeks();
-        Rental rental = rentalRepository.findById(prolongateForm.getRentalId()).orElse(null);
-        if(rental == null){
-            return new ServiceResponse<>(Optional.empty(),"Rental not found");
-        }
+        Optional<Rental> rentalDb = rentalRepository.findById(prolongateForm.getRentalId());
+        if(rentalDb.isEmpty()) return new ServiceResponse<>(Optional.empty(), "Rental Not Found");
+        Rental rental = rentalDb.get();
+
         rental.setProlonged(true);
         rental.setTimeOfRentalInWeeks(rental.getTimeOfRentalInWeeks()+prolongationInWeeks);
         Float penaltyAdded = rental.getPenalty()+(prolongationInWeeks* Consts.PROLONGATION_PENALTY_PER_WEEK);
@@ -155,7 +156,6 @@ public class ReaderService {
                     .filter(book -> book.getAverageBookRating() >= bookFilter.getMinBookRating())
                     .toList();
         }
-
         return filteredList;
     }
 
@@ -181,6 +181,7 @@ public class ReaderService {
     }
 
     public ServiceResponse<List<BookCopy>> getReservedCopiesForReader(int readerId){
+        if(readerId==0) return new ServiceResponse<>(Optional.empty(),"reader id cannot be 0");
         Optional<Reader> reader = readerRepository.findById(readerId);
         if(reader.isEmpty()) return new ServiceResponse<>(Optional.empty(), "Reader not found");
         List<BookCopy> copies = bookCopyRepository.findBookCopiesByReaderAndRentalStatus(reader.get(), RentalStatus.RESERVED);

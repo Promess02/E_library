@@ -61,6 +61,10 @@ public class Worker implements Serializable {
 		this.employedBy = employedBy;
 	}
 
+	public Worker(int monthlyPay) {
+		this.monthlyPay = monthlyPay;
+	}
+
 	public Worker(int monthlyPay, User user, EmployeeManager employedBy, String pesel, String payAccountNumber, String address) {
 		this.monthlyPay = monthlyPay;
 		this.pesel = pesel;

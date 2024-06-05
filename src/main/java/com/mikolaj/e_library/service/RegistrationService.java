@@ -58,7 +58,7 @@ public class RegistrationService {
         EmployeeManager employeeManager = employeeManagerRepository.findById(form.getEmployerId()).orElse(null);
         if(userRepository.existsById(form.getUserId())){
             ServiceResponse<Object> checkUser = checkIfExistsWithUserId(form.getUserId());
-            if(!check.getMessage().equals("ok")) return checkUser;
+            if(!checkUser.getMessage().equals("ok")) return checkUser;
             User user = userRepository.findById(form.getUserId()).orElse(null);
             Worker worker = new Worker(form.getMonthlyPay(),
                     user, employeeManager, form.getPesel(), form.getPayAccountNumber(),form.getAddress());
@@ -84,7 +84,7 @@ public class RegistrationService {
         EmployeeManager employeeManager = employeeManagerRepository.findById(form.getEmployerId()).orElse(null);
         if(userRepository.existsById(form.getUserId())){
             ServiceResponse<Object> checkUser = checkIfExistsWithUserId(form.getUserId());
-            if(!check.getMessage().equals("ok")) return checkUser;
+            if(!checkUser.getMessage().equals("ok")) return checkUser;
             User user = userRepository.findById(form.getUserId()).orElse(null);
 
             WarehouseManager warehouseManager = new WarehouseManager(form.getMonthlyPay(),
@@ -201,16 +201,12 @@ public class RegistrationService {
             Do ustawienia sesji dla użytkownika na zatrzymaną. Ustawia status sesji na "terminated"
          */
         public void terminateSession(String apiKey){
+            if(apiKey==null || apiKey.isEmpty()) return;
             Optional<ApiKey> apiKeyOptional =  apiKeyRepository.findByApiKey(apiKey);
             apiKeyOptional.ifPresent(key -> key.setStatus("terminated"));
             apiKeyRepository.save(apiKeyOptional.get());
         }
 
-        public int authenticateByApiKey(String apiKey, String userType){
-            return apiKeyRepository.findByApiKeyAndStatusAndUserType(apiKey, "active",userType)
-                    .map(ApiKey::getUserId)
-                    .orElse(-1);
-        }
 
     public boolean handleAuthentication(String apiKey, List<String> userTypes){
         Optional<ApiKey> optionalApiKey = apiKeyRepository.findByApiKeyAndStatus(apiKey,"active");

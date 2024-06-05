@@ -63,6 +63,10 @@ public class WarehouseManager implements Serializable {
 		this.employedBy = employedBy;
 	}
 
+	public WarehouseManager(Integer monthlyPay) {
+		this.monthlyPay = monthlyPay;
+	}
+
 	public WarehouseManager(Integer monthlyPay, User user, EmployeeManager employedBy,
 							String PESEL, String payAccountNumber, String address) {
 		this.monthlyPay = monthlyPay;

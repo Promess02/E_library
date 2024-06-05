@@ -8,16 +8,19 @@ import com.mikolaj.e_library.repo.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class RegistrationServiceTest {
@@ -31,6 +34,9 @@ class RegistrationServiceTest {
     private WarehouseManagerRepository warehouseManagerRepository;
     @Mock
     private EmployeeManagerRepository employeeManagerRepository;
+
+    @Mock
+    private ApiKeyRepository apiKeyRepository;
 
     @InjectMocks
     private RegistrationService registrationService;
@@ -55,6 +61,7 @@ class RegistrationServiceTest {
         workerRegistrationForm.setEmail("john.doe@example.com");
         workerRegistrationForm.setPhoneNumber("1234567890");
         workerRegistrationForm.setPassword("password");
+        workerRegistrationForm.setWorkerType("worker");
         workerRegistrationForm.setMonthlyPay(5000);
 
         loginForm = new LoginForm();
@@ -100,7 +107,7 @@ class RegistrationServiceTest {
     @Test
     void testRegisterWorker_UserExists() {
         when(employeeManagerRepository.existsById(workerRegistrationForm.getEmployerId())).thenReturn(true);
-        when(employeeManagerRepository.findById(workerRegistrationForm.getEmployerId())).thenReturn(Optional.of(new EmployeeManager()));
+        when(employeeManagerRepository.findById(workerRegistrationForm.getEmployerId())).thenReturn(Optional.of(employeeManager));
         when(userRepository.existsById(workerRegistrationForm.getUserId())).thenReturn(true);
         when(userRepository.findById(workerRegistrationForm.getUserId())).thenReturn(Optional.of(user));
 
@@ -157,7 +164,7 @@ class RegistrationServiceTest {
     @Test
     void testRegisterWarehouseManager_UserExists() {
         when(employeeManagerRepository.existsById(workerRegistrationForm.getEmployerId())).thenReturn(true);
-        when(employeeManagerRepository.findById(workerRegistrationForm.getEmployerId())).thenReturn(Optional.of(new EmployeeManager()));
+        when(employeeManagerRepository.findById(workerRegistrationForm.getEmployerId())).thenReturn(Optional.of(employeeManager));
         when(userRepository.existsById(workerRegistrationForm.getUserId())).thenReturn(true);
         when(userRepository.findById(workerRegistrationForm.getUserId())).thenReturn(Optional.of(user));
 
@@ -324,4 +331,234 @@ class RegistrationServiceTest {
         assertTrue(response.getData().isPresent());
         assertEquals("Warehouse Manager logged in", response.getMessage());
     }
+
+    @Test
+    public void test_save_new_api_key_for_user() {
+        int userId = 1;
+        String apiKey = "new-api-key";
+        String workerType = "worker";
+
+        registrationService.saveApiKey(userId, apiKey, workerType);
+
+        ArgumentCaptor<ApiKey> apiKeyCaptor = ArgumentCaptor.forClass(ApiKey.class);
+        verify(apiKeyRepository).save(apiKeyCaptor.capture());
+        ApiKey savedApiKey = apiKeyCaptor.getValue();
+
+        assertEquals(userId, savedApiKey.getUserId());
+        assertEquals(apiKey, savedApiKey.getApiKey());
+        assertEquals(workerType, savedApiKey.getUserType());
+        assertEquals("active", savedApiKey.getStatus());
+    }
+
+    @Test
+    public void test_handles_nonexistent_userId() {
+        int userId = -1;
+        String apiKey = "new-api-key";
+        String workerType = "worker";
+
+        registrationService.saveApiKey(userId, apiKey, workerType);
+
+        ArgumentCaptor<ApiKey> apiKeyCaptor = ArgumentCaptor.forClass(ApiKey.class);
+        verify(apiKeyRepository).save(apiKeyCaptor.capture());
+        ApiKey savedApiKey = apiKeyCaptor.getValue();
+
+        assertEquals(userId, savedApiKey.getUserId());
+    }
+
+    @Test
+    public void test_manages_null_or_empty_api_key() {
+
+        int userId = 1;
+        String workerType = "worker";
+
+        // Test with null API key
+        registrationService.saveApiKey(userId, null, workerType);
+
+        // Test with empty API key
+        registrationService.saveApiKey(userId, "", workerType);
+
+        verify(apiKeyRepository, times(2)).save(any(ApiKey.class));
+    }
+
+    @Test
+    public void test_deals_with_invalid_worker_type_values() {
+        int userId = 1;
+        String apiKey = "new-api-key";
+
+        // Test with invalid worker type
+        registrationService.saveApiKey(userId, apiKey, "");
+
+        verify(apiKeyRepository).save(any(ApiKey.class));
+    }
+
+
+        // Valid API key with matching user type returns false
+        @Test
+        public void test_valid_api_key_with_matching_user_type_returns_false() {
+
+            String apiKey = "validApiKey";
+            List<String> userTypes = List.of("userType1");
+            ApiKey apiKeyEntity = new ApiKey();
+            apiKeyEntity.setApiKey(apiKey);
+            apiKeyEntity.setUserType("userType1");
+            when(apiKeyRepository.findByApiKeyAndStatus(apiKey, "active")).thenReturn(Optional.of(apiKeyEntity));
+            boolean result = registrationService.handleAuthentication(apiKey, userTypes);
+            assertFalse(result);
+        }
+
+        // Valid API key with multiple matching user types returns false
+        @Test
+        public void test_valid_api_key_with_multiple_matching_user_types_returns_false() {
+            String apiKey = "validApiKey";
+            List<String> userTypes = List.of("userType1", "userType2");
+            ApiKey apiKeyEntity = new ApiKey();
+            apiKeyEntity.setApiKey(apiKey);
+            apiKeyEntity.setUserType("userType1");
+            when(apiKeyRepository.findByApiKeyAndStatus(apiKey, "active")).thenReturn(Optional.of(apiKeyEntity));
+            boolean result = registrationService.handleAuthentication(apiKey, userTypes);
+            assertFalse(result);
+        }
+
+        // Valid API key with non-matching user type returns true
+        @Test
+        public void test_valid_api_key_with_non_matching_user_type_returns_true() {
+            String apiKey = "validApiKey";
+            List<String> userTypes = List.of("userType2");
+            ApiKey apiKeyEntity = new ApiKey();
+            apiKeyEntity.setApiKey(apiKey);
+            apiKeyEntity.setUserType("userType1");
+            when(apiKeyRepository.findByApiKeyAndStatus(apiKey, "active")).thenReturn(Optional.of(apiKeyEntity));
+            boolean result = registrationService.handleAuthentication(apiKey, userTypes);
+            assertTrue(result);
+        }
+
+        // Valid API key with empty user types list returns true
+        @Test
+        public void test_valid_api_key_with_empty_user_types_list_returns_true() {
+            String apiKey = "validApiKey";
+            List<String> userTypes = List.of();
+            ApiKey apiKeyEntity = new ApiKey();
+            apiKeyEntity.setApiKey(apiKey);
+            apiKeyEntity.setUserType("userType1");
+            when(apiKeyRepository.findByApiKeyAndStatus(apiKey, "active")).thenReturn(Optional.of(apiKeyEntity));
+            boolean result = registrationService.handleAuthentication(apiKey, userTypes);
+            assertTrue(result);
+        }
+
+        // Inactive API key returns true
+        @Test
+        public void test_inactive_api_key_returns_true() {
+            String apiKey = "inactiveApiKey";
+            List<String> userTypes = List.of("userType1");
+            when(apiKeyRepository.findByApiKeyAndStatus(apiKey, "active")).thenReturn(Optional.empty());
+            boolean result = registrationService.handleAuthentication(apiKey, userTypes);
+            assertTrue(result);
+        }
+
+        // Null API key returns true
+        @Test
+        public void test_null_api_key_returns_true() {
+            String apiKey = null;
+            List<String> userTypes = List.of("userType1");
+            boolean result = registrationService.handleAuthentication(apiKey, userTypes);
+            assertTrue(result);
+        }
+
+        // Empty string API key returns true
+        @Test
+        public void test_empty_string_api_key_returns_true() {
+            String apiKey = "";
+            List<String> userTypes = List.of("userType1");
+            boolean result = registrationService.handleAuthentication(apiKey, userTypes);
+            assertTrue(result);
+        }
+
+        // API key with special characters returns true if not found
+        @Test
+        public void test_api_key_with_special_characters_returns_true_if_not_found() {
+            String apiKey = "!@#$%^&*()";
+            List<String> userTypes = List.of("userType1");
+            when(apiKeyRepository.findByApiKeyAndStatus(apiKey, "active")).thenReturn(Optional.empty());
+            boolean result = registrationService.handleAuthentication(apiKey, userTypes);
+            assertTrue(result);
+        }
+
+        // API key with mixed case sensitivity returns true if not found
+        @Test
+        public void test_api_key_with_mixed_case_sensitivity_returns_true_if_not_found() {
+            String apiKey = "ValidApiKEY";
+            List<String> userTypes = List.of("userType1");
+            when(apiKeyRepository.findByApiKeyAndStatus(apiKey.toLowerCase(), "active")).thenReturn(Optional.empty());
+            boolean result = registrationService.handleAuthentication(apiKey.toLowerCase(), userTypes);
+            assertTrue(result);
+        }
+
+        // User type list with null values returns true
+        @Test
+        public void test_user_type_list_with_null_values_returns_true() {
+            String apiKey = "validApiKey";
+            List<String> userTypes = Arrays.asList((String) null);
+            ApiKey apiKeyEntity = new ApiKey();
+            apiKeyEntity.setApiKey(apiKey);
+            apiKeyEntity.setUserType("userType1");
+            when(apiKeyRepository.findByApiKeyAndStatus(apiKey, "active")).thenReturn(Optional.of(apiKeyEntity));
+            boolean result = registrationService.handleAuthentication(apiKey, userTypes);
+            assertTrue(result);
+        }
+
+        // Successfully terminates an active session by setting status to "terminated"
+        @Test
+        public void test_terminate_session_success() {
+            // Generate a random API key for testing
+            String apiKey = registrationService.generateApiKey();
+            ApiKey apiKey1 = new ApiKey(1,apiKey,1,"ACTIVE","worker");
+
+            when(apiKeyRepository.findByApiKey(apiKey)).thenReturn(Optional.of(apiKey1));
+
+            // Call the method to terminate the session
+            registrationService.terminateSession(apiKey);
+
+            // Retrieve the API key after termination
+            Optional<ApiKey> terminatedApiKey = apiKeyRepository.findByApiKey(apiKey);
+
+            // Check if the status is set to "terminated"
+            assertTrue(terminatedApiKey.isPresent());
+            assertEquals("terminated", terminatedApiKey.get().getStatus());
+        }
+
+        // Saves the updated ApiKey object with status "terminated" in the repository
+        @Test
+        public void test_terminate_session_updates_apikey_status() {
+            // Create a sample ApiKey object
+            ApiKey apiKey = new ApiKey();
+            apiKey.setApiKey("sample_api_key");
+            apiKey.setUserId(1); // Assuming user ID is 1
+            apiKey.setStatus("active"); // Initial status
+
+            // Mock the repository method to return the ApiKey object
+            when(apiKeyRepository.findByApiKey(apiKey.getApiKey())).thenReturn(Optional.of(apiKey));
+
+            // Call the service method
+            registrationService.terminateSession(apiKey.getApiKey());
+
+            // Verify that the repository method was called with the correct argument
+            verify(apiKeyRepository).save(apiKey);
+
+            // Check if the status is updated to "terminated"
+            assertEquals("terminated", apiKey.getStatus());
+        }
+
+        // Provided apiKey is null or empty
+        @Test
+        public void test_terminate_session_null_or_empty_apiKey() {
+            registrationService.terminateSession(null);
+            verify(apiKeyRepository, never()).findByApiKey(any());
+
+            // Test when apiKey is empty
+            registrationService.terminateSession("");
+            verify(apiKeyRepository, never()).findByApiKey(any());
+        }
+
+
+
 }

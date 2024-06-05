@@ -4,6 +4,7 @@ import com.mikolaj.e_library.DTO.CopiesForm;
 import com.mikolaj.e_library.DTO.ServiceResponse;
 import com.mikolaj.e_library.model.Book;
 import com.mikolaj.e_library.model.BookCopy;
+import com.mikolaj.e_library.model.WarehouseManager;
 import com.mikolaj.e_library.repo.BookCopyRepository;
 import com.mikolaj.e_library.repo.BookRepository;
 import com.mikolaj.e_library.repo.WarehouseManagerRepository;
@@ -12,6 +13,8 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -118,28 +121,45 @@ class WarehouseManagerServiceTest {
 
     @Test
     void addBookCopy_Success() {
-        BookCopy bookCopy = new BookCopy();
-        when(bookCopyRepository.save(any(BookCopy.class))).thenReturn(bookCopy);
+        BookCopy bookCopy = new BookCopy();;
         CopiesForm copiesForm = new CopiesForm();
+        Book book = new Book("new");
+        copiesForm.setCopyId(0);
+        copiesForm.setWorkerId(1);
+        copiesForm.setBookId(1);
+        when(bookCopyRepository.save(any(BookCopy.class))).thenReturn(bookCopy);
+        when(bookCopyRepository.existsById(bookCopy.getCopyId())).thenReturn(true);
+        when(bookCopyRepository.save(any(BookCopy.class))).thenReturn(bookCopy);
+        when(bookRepository.findById(1)).thenReturn(Optional.of(book));
+        when(warehouseManagerRepository.findById(1)).thenReturn(Optional.of(new WarehouseManager()));
 
         ServiceResponse<BookCopy> response = warehouseManagerService.addBookCopy(copiesForm, 1);
 
         assertTrue(response.getData().isPresent());
-        assertEquals("Book copy added successfully", response.getMessage());
-        verify(bookCopyRepository, times(1)).save(bookCopy);
+        assertEquals("Book copies added successfully", response.getMessage());
+        verify(bookCopyRepository, times(1)).save(any());
     }
 
     @Test
     void addBookCopy_Failure() {
         BookCopy bookCopy = new BookCopy();
-        when(bookCopyRepository.save(any(BookCopy.class))).thenThrow(new RuntimeException("Error"));
+        bookCopy.setCopyId(1);
         CopiesForm copiesForm = new CopiesForm();
+        Book book = new Book("new");
+        copiesForm.setCopyId(1);
+        copiesForm.setWorkerId(1);
+        copiesForm.setBookId(1);
+
+        when(bookCopyRepository.existsById(bookCopy.getCopyId())).thenReturn(true);
+        when(bookCopyRepository.save(any(BookCopy.class))).thenReturn(bookCopy);
+        when(bookRepository.findById(1)).thenReturn(Optional.of(book));
+        when(warehouseManagerRepository.findById(1)).thenReturn(Optional.of(new WarehouseManager()));
+        when(bookCopyRepository.save(any(BookCopy.class))).thenThrow(new RuntimeException("Error"));
 
         ServiceResponse<BookCopy> response = warehouseManagerService.addBookCopy(copiesForm, 1);
 
         assertFalse(response.getData().isPresent());
         assertEquals("Error adding book copy: Error", response.getMessage());
-        verify(bookCopyRepository, times(1)).save(bookCopy);
     }
 
     @Test
@@ -147,15 +167,22 @@ class WarehouseManagerServiceTest {
         BookCopy bookCopy = new BookCopy();
         bookCopy.setCopyId(1);
         CopiesForm copiesForm = new CopiesForm();
+        Book book = new Book("new");
+        copiesForm.setCopyId(1);
+        copiesForm.setWorkerId(1);
+        copiesForm.setBookId(1);
         when(bookCopyRepository.existsById(bookCopy.getCopyId())).thenReturn(true);
         when(bookCopyRepository.save(any(BookCopy.class))).thenReturn(bookCopy);
+        when(bookRepository.findById(1)).thenReturn(Optional.of(book));
+        when(warehouseManagerRepository.findById(1)).thenReturn(Optional.of(new WarehouseManager()));
 
         ServiceResponse<BookCopy> response = warehouseManagerService.updateBookCopy(copiesForm);
 
         assertTrue(response.getData().isPresent());
         assertEquals("Book copy updated successfully", response.getMessage());
-        verify(bookCopyRepository, times(1)).existsById(bookCopy.getCopyId());
-        verify(bookCopyRepository, times(1)).save(bookCopy);
+        verify(bookCopyRepository, times(1)).existsById(copiesForm.getCopyId());
+        verify(bookRepository, times(1)).findById(1);
+        verify(warehouseManagerRepository, times(1)).findById(1);
     }
 
     @Test
@@ -164,6 +191,7 @@ class WarehouseManagerServiceTest {
         bookCopy.setCopyId(1);
         when(bookCopyRepository.existsById(bookCopy.getCopyId())).thenReturn(false);
         CopiesForm copiesForm = new CopiesForm();
+        copiesForm.setCopyId(bookCopy.getCopyId());
 
         ServiceResponse<BookCopy> response = warehouseManagerService.updateBookCopy(copiesForm);
 

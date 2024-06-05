@@ -99,6 +99,7 @@ class WorkerServiceTest {
         BookCopy bookCopy = new BookCopy("5D");
         bookCopy.setCopyId(1);
         rental.setBookCopy(bookCopy);
+        rental.setStatus(RentalStatus.ACTIVE);
 
         when(rentalRepository.existsById(anyInt())).thenReturn(true);
         when(rentalRepository.findById(anyInt())).thenReturn(Optional.of(rental));
@@ -119,6 +120,7 @@ class WorkerServiceTest {
         rental.setRentalId(1);
         rental.setRentalDate(LocalDate.now().minusDays(10)); // Set rental date to 10 days ago
         rental.setTimeOfRentalInWeeks(2); // Rental period is 2 weeks
+        rental.setStatus(RentalStatus.ACTIVE);
 
         // Create reader
         Reader reader = new Reader();
@@ -163,6 +165,7 @@ class WorkerServiceTest {
         rental.setRentalId(1);
         rental.setRentalDate(LocalDate.now().minusDays(28)); // Set rental date to 10 days ago
         rental.setTimeOfRentalInWeeks(2); // Rental period is 2 weeks
+        rental.setStatus(RentalStatus.ACTIVE);
 
 
         // Create reader
@@ -223,7 +226,7 @@ class WorkerServiceTest {
 
     @Test
     void testUpdateNewsPost_NewsPostNotFound() {
-        when(newsPostRepository.findById(addNewsPostForm.getNewsPostId())).thenReturn(Optional.empty());
+        when(newsPostRepository.findById(addNewsPostForm.getPostId())).thenReturn(Optional.empty());
 
         ServiceResponse<NewsPost> response = workerService.updateNewsPost(addNewsPostForm);
 
@@ -233,7 +236,7 @@ class WorkerServiceTest {
 
     @Test
     void testUpdateNewsPost_WorkerNotFound() {
-        when(newsPostRepository.findById(addNewsPostForm.getNewsPostId())).thenReturn(Optional.of(newsPost));
+        when(newsPostRepository.findById(addNewsPostForm.getPostId())).thenReturn(Optional.of(newsPost));
         when(workerRepository.findById(addNewsPostForm.getWorkerId())).thenReturn(Optional.empty());
 
         ServiceResponse<NewsPost> response = workerService.updateNewsPost(addNewsPostForm);
@@ -244,7 +247,7 @@ class WorkerServiceTest {
 
     @Test
     void testUpdateNewsPost_Success() {
-        when(newsPostRepository.findById(addNewsPostForm.getNewsPostId())).thenReturn(Optional.of(newsPost));
+        when(newsPostRepository.findById(addNewsPostForm.getPostId())).thenReturn(Optional.of(newsPost));
         when(workerRepository.findById(addNewsPostForm.getWorkerId())).thenReturn(Optional.of(worker));
         when(newsPostRepository.save(any(NewsPost.class))).thenReturn(newsPost);
 

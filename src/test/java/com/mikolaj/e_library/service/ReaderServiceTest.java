@@ -12,12 +12,10 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.data.domain.Page;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.time.LocalDateTime;
+import java.util.*;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 
@@ -323,7 +321,7 @@ public class ReaderServiceTest {
         ServiceResponse<Rental> response = readerService.prolongateRental(new ProlongateForm(1, 3));
 
         // Verify the response
-        assertEquals("Rental not found", response.getMessage());
+        assertEquals("Rental Not Found", response.getMessage());
         assertEquals(Optional.empty(), response.getData());
     }
 
@@ -452,7 +450,7 @@ public class ReaderServiceTest {
         List<NewsPost> newsPostsInRange = new ArrayList<>();
         // Add mock news posts within the range to the list (you can add more if needed)
         newsPostsInRange.add(new NewsPost("newPost"));
-        when(newsPostRepository.findNewsPostsByCreateTimeBetween(startDate, endDate)).thenReturn(newsPostsInRange);
+        when(newsPostRepository.findNewsPostsByCreateTimeBetween(any(), any())).thenReturn(newsPostsInRange);
 
         // Create a DateRange object with the start and end dates
         DateRange dateRange = new DateRange(startDate, endDate);
@@ -477,4 +475,209 @@ public class ReaderServiceTest {
         assertEquals("No News Posts Found", response.getMessage());
         assertEquals(Optional.empty(), response.getData());
     }
+
+    @Test
+    public void test_successfully_reserve_free_book_copy() {
+        int bookId = 1;
+        int readerId = 1;
+        Reader reader = new Reader();
+        Book book = new Book();
+        BookCopy bookCopy = new BookCopy();
+        bookCopy.setRentalStatus(RentalStatus.FREE);
+        List<BookCopy> copies = Collections.singletonList(bookCopy);
+
+        when(readerRepository.findById(readerId)).thenReturn(Optional.of(reader));
+        when(bookRepository.findById(bookId)).thenReturn(Optional.of(book));
+        when(bookCopyRepository.findBookCopiesByBook(book)).thenReturn(copies);
+
+        ServiceResponse<BookCopy> response = readerService.reserveBook(bookId, readerId);
+
+        verify(bookCopyRepository).save(bookCopy);
+        assertEquals("Book copy reserved", response.getMessage());
+        assertEquals(RentalStatus.RESERVED, response.getData().get().getRentalStatus());
+    }
+
+    @Test
+    public void test_rental_status_updated_to_reserved() {
+        int bookId = 1;
+        int readerId = 1;
+        Reader reader = new Reader();
+        Book book = new Book();
+        BookCopy bookCopy = new BookCopy();
+        bookCopy.setRentalStatus(RentalStatus.FREE);
+        List<BookCopy> copies = Collections.singletonList(bookCopy);
+
+        when(readerRepository.findById(readerId)).thenReturn(Optional.of(reader));
+        when(bookRepository.findById(bookId)).thenReturn(Optional.of(book));
+        when(bookCopyRepository.findBookCopiesByBook(book)).thenReturn(copies);
+
+        ServiceResponse<BookCopy> response = readerService.reserveBook(bookId, readerId);
+
+        assertEquals(RentalStatus.RESERVED, response.getData().get().getRentalStatus());
+    }
+
+    @Test
+    public void test_reserve_book_with_invalid_book_id() {
+        int invalidBookId = 999;
+        int readerId = 1;
+        Reader reader = new Reader(24f);
+        when(bookRepository.findById(invalidBookId)).thenReturn(Optional.empty());
+        when(readerRepository.findById(readerId)).thenReturn(Optional.of(reader));
+
+        ServiceResponse<BookCopy> response = readerService.reserveBook(invalidBookId, readerId);
+
+        assertEquals("Book not found", response.getMessage());
+    }
+
+    @Test
+    public void test_reserve_book_with_invalid_reader_id() {
+        int bookId = 1;
+        int invalidReaderId = 999;
+
+        when(readerRepository.findById(invalidReaderId)).thenReturn(Optional.empty());
+
+        ServiceResponse<BookCopy> response = readerService.reserveBook(bookId, invalidReaderId);
+
+        assertEquals("Reader not found", response.getMessage());
+    }
+
+    @Test
+    public void test_reserve_book_no_free_copies_available() {
+        int bookId = 1;
+        int readerId = 1;
+        Reader reader = new Reader();
+        Book book = new Book();
+        BookCopy bookCopy = new BookCopy();
+        bookCopy.setRentalStatus(RentalStatus.RENTED);
+        List<BookCopy> copies = Collections.singletonList(bookCopy);
+
+        when(readerRepository.findById(readerId)).thenReturn(Optional.of(reader));
+        when(bookRepository.findById(bookId)).thenReturn(Optional.of(book));
+        when(bookCopyRepository.findBookCopiesByBook(book)).thenReturn(copies);
+
+        ServiceResponse<BookCopy> response = readerService.reserveBook(bookId, readerId);
+
+        assertEquals("No free book copies found", response.getMessage());
+    }
+
+        // Returns reserved book copies when reader exists and has reserved copies
+        @Test
+        public void test_returns_reserved_copies_when_reader_exists_and_has_reserved_copies() {
+            int readerId = 1;
+            Reader reader = new Reader();
+            reader.setReaderId(readerId);
+            List<BookCopy> reservedCopies = Arrays.asList(new BookCopy(), new BookCopy());
+
+            when(readerRepository.findById(readerId)).thenReturn(Optional.of(reader));
+            when(bookCopyRepository.findBookCopiesByReaderAndRentalStatus(reader, RentalStatus.RESERVED)).thenReturn(reservedCopies);
+
+            ServiceResponse<List<BookCopy>> response = readerService.getReservedCopiesForReader(readerId);
+
+            assertTrue(response.getData().isPresent());
+            assertEquals(reservedCopies, response.getData().get());
+            assertEquals("ReservedCopiesFound", response.getMessage());
+        }
+
+        // Returns an empty list when reader exists but has no reserved copies
+        @Test
+        public void test_returns_empty_list_when_reader_exists_but_has_no_reserved_copies() {
+            int readerId = 1;
+            Reader reader = new Reader();
+            reader.setReaderId(readerId);
+            List<BookCopy> reservedCopies = Collections.emptyList();
+
+            when(readerRepository.findById(readerId)).thenReturn(Optional.of(reader));
+            when(bookCopyRepository.findBookCopiesByReaderAndRentalStatus(reader, RentalStatus.RESERVED)).thenReturn(reservedCopies);
+
+            ServiceResponse<List<BookCopy>> response = readerService.getReservedCopiesForReader(readerId);
+
+            assertTrue(response.getData().isPresent());
+            assertTrue(response.getData().get().isEmpty());
+            assertEquals("ReservedCopiesFound", response.getMessage());
+        }
+
+        // Correctly identifies and returns reserved copies for a given reader ID
+        @Test
+        public void test_correctly_identifies_and_returns_reserved_copies_for_given_reader_id() {
+            int readerId = 1;
+            Reader reader = new Reader();
+            reader.setReaderId(readerId);
+            List<BookCopy> reservedCopies = Arrays.asList(new BookCopy(), new BookCopy());
+
+            when(readerRepository.findById(readerId)).thenReturn(Optional.of(reader));
+            when(bookCopyRepository.findBookCopiesByReaderAndRentalStatus(reader, RentalStatus.RESERVED)).thenReturn(reservedCopies);
+
+            ServiceResponse<List<BookCopy>> response = readerService.getReservedCopiesForReader(readerId);
+
+            assertTrue(response.getData().isPresent());
+            assertEquals(reservedCopies, response.getData().get());
+            assertEquals("ReservedCopiesFound", response.getMessage());
+        }
+
+        // Properly interacts with the repository to fetch reserved copies
+        @Test
+        public void test_properly_interacts_with_repository_to_fetch_reserved_copies() {
+            int readerId = 1;
+            Reader reader = new Reader();
+            reader.setReaderId(readerId);
+            List<BookCopy> reservedCopies = Arrays.asList(new BookCopy(), new BookCopy());
+
+            when(readerRepository.findById(readerId)).thenReturn(Optional.of(reader));
+            when(bookCopyRepository.findBookCopiesByReaderAndRentalStatus(reader, RentalStatus.RESERVED)).thenReturn(reservedCopies);
+
+            ServiceResponse<List<BookCopy>> response = readerService.getReservedCopiesForReader(readerId);
+
+            verify(readerRepository).findById(readerId);
+            verify(bookCopyRepository).findBookCopiesByReaderAndRentalStatus(reader, RentalStatus.RESERVED);
+
+            assertTrue(response.getData().isPresent());
+            assertEquals(reservedCopies, response.getData().get());
+            assertEquals("ReservedCopiesFound", response.getMessage());
+        }
+
+        // Reader ID does not exist in the repository
+        @Test
+        public void test_reader_id_does_not_exist_in_repository() {
+            int readerId = 1;
+
+            when(readerRepository.findById(readerId)).thenReturn(Optional.empty());
+
+            ServiceResponse<List<BookCopy>> response = readerService.getReservedCopiesForReader(readerId);
+
+            assertFalse(response.getData().isPresent());
+            assertEquals("Reader not found", response.getMessage());
+        }
+
+        // Reader ID is null or invalid
+        @Test
+        public void test_reader_id_is_null_or_invalid() {
+            Integer readerId = 0;
+
+            ServiceResponse<List<BookCopy>> response = readerService.getReservedCopiesForReader(readerId);
+
+            assertFalse(response.getData().isPresent());
+            assertEquals("reader id cannot be 0", response.getMessage());
+        }
+
+        // Reader exists but has no book copies associated with them
+        @Test
+        public void test_reader_exists_but_has_no_book_copies_associated_with_them() {
+            int readerId = 1;
+            Reader reader = new Reader();
+            reader.setReaderId(readerId);
+            List<BookCopy> reservedCopies = Collections.emptyList();
+
+            when(readerRepository.findById(readerId)).thenReturn(Optional.of(reader));
+            when(bookCopyRepository.findBookCopiesByReaderAndRentalStatus(reader, RentalStatus.RESERVED)).thenReturn(reservedCopies);
+
+            ServiceResponse<List<BookCopy>> response = readerService.getReservedCopiesForReader(readerId);
+
+            assertTrue(response.getData().isPresent());
+            assertTrue(response.getData().get().isEmpty());
+            assertEquals("ReservedCopiesFound", response.getMessage());
+        }
+
+
+
+
 }
