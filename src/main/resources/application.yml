@@ -14,7 +14,7 @@ spring:
   mvc:
     cors:
       mapping:
-        /book/getAll:
+        /book/getAllPaginated:
           allowed-origins: "http://localhost:8080"
           allowed-methods: "GET, POST, PUT, DELETE"
           allowed-headers: "*"
