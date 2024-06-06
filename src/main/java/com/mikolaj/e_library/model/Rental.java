@@ -30,13 +30,13 @@ public class Rental implements Serializable {
 	//@org.hibernate.annotations.GenericGenerator(name="COM_MIKOLAJ_RENTAL_RENTALID_GENERATOR", strategy="identity")
 	private int rentalId;
 	
-	@Column(name="rental_date", nullable=false)
+	@Column(name="rental_date")
 //	@Temporal(TemporalType.DATE)
 	@JsonSerialize(using = CustomDateSerializer.class)
 	@JsonDeserialize(using = CustomDateDeserializer.class)
 	private LocalDate rentalDate;
 	
-	@Column(name="rental_return_date")
+	@Column(name="rental_return_date", nullable=true)
 	@JsonSerialize(using = CustomDateSerializer.class)
 	@JsonDeserialize(using = CustomDateDeserializer.class)
 	private LocalDate rentalReturnDate;
@@ -50,7 +50,7 @@ public class Rental implements Serializable {
 	@Column(name="penalty", length=10)
 	private Float penalty;
 	
-	@Column(name="status", nullable=false)
+	@Column(name="status")
 	@Convert(converter = RentalStatusConverter.class)
 	private RentalStatus status = RentalStatus.INACTIVE;
 	
@@ -79,10 +79,9 @@ public class Rental implements Serializable {
 		this.reader = reader;
 		this.bookCopy = bookCopy;
 		this.timeOfRentalInWeeks = timeOfRentalInWeeks;
-		rentalDate = LocalDate.now();
 		penalty = 0f;
 		isProlonged = false;
-
+		rentalDate = LocalDate.now();
 	}
 
 	public String toString() {

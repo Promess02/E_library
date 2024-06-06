@@ -29,10 +29,10 @@ public class EmployeeManager implements Serializable {
 	@JoinColumn(name = "Id")
 	private User user;
 
-	@Column(name = "pesel", nullable = false)
+	@Column(name = "pesel")
 	private String pesel;
 
-	@Column(name = "pay_account_number", nullable = false)
+	@Column(name = "pay_account_number")
 	private String payAccountNumber;
 
 	@Column(name = "address")

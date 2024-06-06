@@ -58,7 +58,7 @@ public class BookController {
     */
     @PostMapping("/getAllPaginated/apiKey={apiKey}")
     public ResponseEntity<?> getBooks(@RequestBody Pagination pagination, @PathVariable String apiKey){
-        if(registrationService.handleAuthentication(apiKey, List.of("reader"))) return ResponseUtil.badRequestResponse("Authentication failed");
+        if(registrationService.handleAuthentication(apiKey, List.of("reader", "worker", "employee manager", "warehouse manager"))) return ResponseUtil.badRequestResponse("Authentication failed");
         Page<Book> booksPage;
 
         if (pagination.getFilterBy().isEmpty()) {
@@ -125,7 +125,7 @@ Email może być pusty i wtedy wiemy, że użytkownik wysyła, jeżwki coś jest
      */
     @PostMapping("/save/apiKey={apiKey}")
     public ResponseEntity<?> saveBook(@RequestBody Book book, @PathVariable String apiKey){
-        if(registrationService.handleAuthentication(apiKey, List.of("warehouseManager","worker"))) return ResponseUtil.badRequestResponse("Authentication failed");
+        if(registrationService.handleAuthentication(apiKey, List.of("warehouse manager","worker"))) return ResponseUtil.badRequestResponse("Authentication failed");
         ServiceResponse<Book> response = new ServiceResponse<>(Optional.of(bookRepository.save(book)),"book saved");
         if(response.getData().isEmpty()) return ResponseUtil.badRequestResponse("couldn't save book");
         return ResponseUtil.okResponse(response.getMessage(), "Book", response.getData().get());
@@ -138,7 +138,7 @@ Email może być pusty i wtedy wiemy, że użytkownik wysyła, jeżwki coś jest
     */
     @DeleteMapping("/delete/apiKey={apiKey}")
     public ResponseEntity<?> deleteBook(@RequestBody Book book, @PathVariable String apiKey){
-        if(registrationService.handleAuthentication(apiKey, List.of("warehouseManager","worker"))) return ResponseUtil.badRequestResponse("Authentication failed");
+        if(registrationService.handleAuthentication(apiKey, List.of("warehouse manager","worker"))) return ResponseUtil.badRequestResponse("Authentication failed");
         if (bookRepository.findById(book.getBookId()).isPresent()) {
             bookRepository.delete(book);
             return ResponseUtil.okResponse("book deleted", "Book", book);
