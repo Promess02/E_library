@@ -46,7 +46,7 @@ public class WorkerService {
 
         BookCopy rentedCopy = null;
         for(BookCopy copy : copies)
-            if(copy.getRentalStatus().equals(RentalStatus.FREE)){
+            if(copy.getRentalStatus().equals(RentalStatus.RESERVED) && copy.getReader().getReaderId() == reader.get().getReaderId()){
                 rentedCopy = copy;
                 break;
             }
@@ -91,7 +91,7 @@ public class WorkerService {
         }
         BookCopy copy = copyDb.get();
         copy.setRentalStatus(RentalStatus.FREE);
-        copy.setReader(rentalDb.getReader());
+        copy.setReader(null);
         bookCopyRepository.save(copy);
         rentalRepository.save(rentalDb);
 

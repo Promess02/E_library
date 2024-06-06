@@ -95,7 +95,7 @@ Email może być pusty i wtedy wiemy, że użytkownik wysyła, jeżwki coś jest
     "readerEmail": ""
  }
  */
-    @GetMapping("/getAllReserved/apiKey={apiKey}")
+    @PostMapping("/getAllReserved/apiKey={apiKey}")
     public ResponseEntity<?> getAllReservedForReader(@RequestBody BookReservation reservation, @PathVariable String apiKey){
         if(registrationService.handleAuthentication(apiKey, List.of("reader", "worker"))) return ResponseUtil.badRequestResponse("Authentication failed");
         int readerId = registrationService.getWorkerTypeIdForApiKey(apiKey);
