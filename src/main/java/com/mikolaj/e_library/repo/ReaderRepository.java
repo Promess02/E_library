@@ -7,6 +7,8 @@ import java.util.Optional;
 
 public interface ReaderRepository extends JpaRepository<Reader, Integer> {
     Optional<Reader> findByUserEmail(String email);
+    boolean existsByUserId(int userId);
+    Optional<Reader> findByUserId(int userId);
     boolean existsByUserEmail(String email);
 
 }

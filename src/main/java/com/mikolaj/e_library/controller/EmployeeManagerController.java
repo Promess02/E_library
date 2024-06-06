@@ -45,7 +45,7 @@ public class EmployeeManagerController {
 
     /*
         {
-            "workerId": 1,
+            "workerEmail": "1",
             "pesel": "1241421",
             "payAccountNumber": "3264151",
             "address": "Kochanów Wieniawski 23a"
@@ -54,6 +54,7 @@ public class EmployeeManagerController {
     @PatchMapping("/updateWorker/apiKey={apiKey}")
     public ResponseEntity<?> updateWorker(@RequestBody Worker worker, @PathVariable String apiKey) {
         if(registrationService.handleAuthentication(apiKey, List.of("employee manager"))) return ResponseUtil.badRequestResponse("Authentication failed");
+
         ServiceResponse<Worker> response = employeeManagerService.updateWorker(worker);
         if (response.getData().isEmpty()) {
             return ResponseUtil.badRequestResponse(response.getMessage());

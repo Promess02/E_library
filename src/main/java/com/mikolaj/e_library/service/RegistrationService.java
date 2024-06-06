@@ -19,7 +19,7 @@ public class RegistrationService {
     private final WorkerRepository workerRepository;
     private final WarehouseManagerRepository warehouseManagerRepository;
     private final EmployeeManagerRepository employeeManagerRepository;
-    private ApiKeyRepository apiKeyRepository;
+    private final ApiKeyRepository apiKeyRepository;
 
     public RegistrationService(UserRepository userRepository, ReaderRepository readerRepository, WorkerRepository workerRepository,
                                WarehouseManagerRepository warehouseManagerRepository, EmployeeManagerRepository employeeManagerRepository, ApiKeyRepository apiKeyRepository) {
@@ -193,8 +193,47 @@ public class RegistrationService {
             key.setUserId(userId);
             key.setApiKey(apiKey);
             key.setUserType(workerType);
+            int workerTypeId = 0;
+            switch(workerType){
+                case "worker" -> {
+                    if(!workerRepository.existsByUserId(userId)) throw new RuntimeException("No worker for given id found");
+                    workerTypeId = workerRepository.findByUserId(userId).get().getWorkerId();
+                }
+                case "warehouse manager" ->{
+                    if(!warehouseManagerRepository.existsByUserId(userId)) throw new RuntimeException("No worker for given id found");
+                    workerTypeId = warehouseManagerRepository.findByUserId(userId).get().getWareManId();
+                }
+                case "employee manager" -> {
+                    if(!employeeManagerRepository.existsByUserId(userId)) throw new RuntimeException("No worker for given id found");
+                    workerTypeId = employeeManagerRepository.findByUserId(userId).get().getEmpManId();
+                }
+                case "reader" -> {
+                    if(!readerRepository.existsByUserId(userId)) throw new RuntimeException("No worker for given id found");
+                    workerTypeId = readerRepository.findByUserId(userId).get().getReaderId();
+                }
+            }
+            key.setWorkerTypeId(workerTypeId);
             apiKeyRepository.deleteAllByUserIdAndStatus(userId, "active");
             apiKeyRepository.save(key);
+        }
+
+        public int getWorkerTypeIdForApiKey(String key){
+            Optional<ApiKey> apiKey = apiKeyRepository.findByApiKeyAndStatus(key, "active");
+            return apiKey.map(ApiKey::getWorkerTypeId).orElse(-1);
+        }
+
+        public String getWorkerTypeForApiKey(String key){
+            Optional<ApiKey> apiKey = apiKeyRepository.findByApiKeyAndStatus(key, "active");
+            return apiKey.isPresent()?apiKey.get().getUserType():"user";
+        }
+
+
+        public String getUserEmailForApiKey(String key){
+            ApiKey apiKey = apiKeyRepository.findByApiKeyAndStatus(key, "active").orElse(null);
+            if(apiKey==null) return "";
+            User user = userRepository.findById(apiKey.getUserId()).orElse(null);
+            if(user==null) return "";
+            return user.getEmail();
         }
 
         /*

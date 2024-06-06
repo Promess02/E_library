@@ -82,13 +82,13 @@ public class WarehouseManagerController {
     /*
         {
             "bookId": 3,
-            "shelfPlace": "4g",
-            "workerId": 1
+            "shelfPlace": "4g"
         }
      */
     @PostMapping("/addBookCopy/copies={numberOfCopies}/apiKey={apiKey}")
     public ResponseEntity<?> addBookCopy(@RequestBody CopiesForm copiesForm, @PathVariable Integer numberOfCopies, @PathVariable String apiKey) {
         if(registrationService.handleAuthentication(apiKey, List.of("warehouse manager"))) return ResponseUtil.badRequestResponse("Authentication failed");
+        copiesForm.setWorkerId(registrationService.getWorkerTypeIdForApiKey(apiKey));
         ServiceResponse<BookCopy> serviceResponse = warehouseManagerService.addBookCopy(copiesForm, numberOfCopies);
         if (serviceResponse.getData().isEmpty()) {
             return ResponseUtil.badRequestResponse(serviceResponse.getMessage());
@@ -103,12 +103,12 @@ public class WarehouseManagerController {
         // UWAGA RENTALSTATUS TO ENUM I PRZYJMUJE TYLKO JEDNA Z WARTOŚCI ENUMA RENTALSTATUS
         "rentalStatus": "active",
         "qualityStatus": "pretty bad",
-        "workerId": 2
     }
     */
     @PutMapping("/updateBookCopy/apiKey={apiKey}")
     public ResponseEntity<?> updateBookCopy(@RequestBody CopiesForm copiesForm, @PathVariable String apiKey) {
         if(registrationService.handleAuthentication(apiKey, List.of("warehouse manager"))) return ResponseUtil.badRequestResponse("Authentication failed");
+        copiesForm.setWorkerId(registrationService.getWorkerTypeIdForApiKey(apiKey));
         ServiceResponse<BookCopy> serviceResponse = warehouseManagerService.updateBookCopy(copiesForm);
         if (serviceResponse.getData().isEmpty()) {
             return ResponseUtil.badRequestResponse(serviceResponse.getMessage());

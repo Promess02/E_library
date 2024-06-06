@@ -9,6 +9,7 @@ import java.util.Optional;
 
 public interface WorkerRepository extends JpaRepository<Worker, Integer> {
     Optional<Worker> findByUserEmail(String email);
+    Optional<Worker> findByUserId(int id);
     boolean existsByUserEmail(String email);
     boolean existsByUserId(int userId);
 

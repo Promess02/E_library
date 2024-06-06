@@ -41,6 +41,7 @@ public class User implements Serializable {
 	@Column(name="image_url", nullable=true, length=255)
 	private String imageUrl;
 
+
 	public User(String name, String surname, String email, String phoneNumber, String password) {
 		this.name = name;
 		this.surname = surname;

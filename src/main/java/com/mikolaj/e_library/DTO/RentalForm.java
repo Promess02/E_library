@@ -6,7 +6,7 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class RentalForm {
-    int readerId;
+    String readerEmail;
     int bookId;
     int rentalInWeeks;
 }

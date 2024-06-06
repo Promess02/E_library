@@ -22,6 +22,7 @@ public class ApiKey {
     private int userId;
     private String status = "active";
     private String userType = "user";
+    private int workerTypeId = 0;
 }
 
 

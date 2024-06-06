@@ -78,25 +78,34 @@ public class BookController {
     /*
         {
         "bookId": 2,
-        "readerId": 4
         }
      */
     @PatchMapping("/reserveBook/apiKey={apiKey}")
     public ResponseEntity<?> reserveBook(@RequestBody BookReservation reservation, @PathVariable String apiKey){
         if(registrationService.handleAuthentication(apiKey, List.of("reader", "worker"))) return ResponseUtil.badRequestResponse("Authentication failed");
+        reservation.setReaderId(registrationService.getWorkerTypeIdForApiKey(apiKey));
         ServiceResponse<BookCopy> response = readerService.reserveBook(reservation.getBookId(), reservation.getReaderId());
         if(response.getData().isEmpty()) return  ResponseUtil.badRequestResponse(response.getMessage());
         return ResponseUtil.okResponse(response.getMessage(), "BookCopy", response.getData());
     }
-    /*
-    {
-    "readerId": 3
-    }
-     */
+
+/*
+Email może być pusty i wtedy wiemy, że użytkownik wysyła, jeżwki coś jest to pracownik
+ {
+    "readerEmail": ""
+ }
+ */
     @GetMapping("/getAllReserved/apiKey={apiKey}")
     public ResponseEntity<?> getAllReservedForReader(@RequestBody BookReservation reservation, @PathVariable String apiKey){
         if(registrationService.handleAuthentication(apiKey, List.of("reader", "worker"))) return ResponseUtil.badRequestResponse("Authentication failed");
-        ServiceResponse<List<BookCopy>> response = readerService.getReservedCopiesForReader(reservation.getReaderId());
+        int readerId = registrationService.getWorkerTypeIdForApiKey(apiKey);
+        if(reservation.getReaderEmail()!=null && !reservation.getReaderEmail().isEmpty() &&
+                registrationService.getWorkerTypeForApiKey(apiKey).equals("worker")){
+            Optional<Reader> reader = readerRepository.findByUserEmail(reservation.getReaderEmail());
+            if (reader.isEmpty()) return ResponseUtil.badRequestResponse("No reader found with given email");
+            readerId = reader.get().getReaderId();
+        }
+        ServiceResponse<List<BookCopy>> response = readerService.getReservedCopiesForReader(readerId);
         if(response.getData().isEmpty()) return ResponseUtil.badRequestResponse(response.getMessage());
         return ResponseUtil.okResponse(response.getMessage(), "Copy list", response.getData());
     }
@@ -140,14 +149,16 @@ public class BookController {
     /*
     Wypożycza książkę(Book.class) o danym id dla czytelnika z danym id na podaną liczbę tygodni
         {
-            "readerId": 2,
             "bookId": 4,
             "rentalInWeeks": 5
+            "readerEmail": "miko"
         }
      */
     @PostMapping("/rent/apiKey={apiKey}")
     public ResponseEntity<?> rentBook(@RequestBody RentalForm rentalForm, @PathVariable String apiKey){
         if(registrationService.handleAuthentication(apiKey, List.of("reader","worker"))) return ResponseUtil.badRequestResponse("Authentication failed");
+        String email = processEmail(rentalForm.getReaderEmail(),apiKey);
+        rentalForm.setReaderEmail(email);
         ServiceResponse<?> response = readerService.bookRental(rentalForm);
         if(response.getData().isEmpty()) return ResponseUtil.badRequestResponse(response.getMessage());
         return ResponseUtil.okResponse(response.getMessage(), "Rental", response.getData().get());
@@ -155,15 +166,18 @@ public class BookController {
 
 
     /*
-        Zwraca wszystkie wypożyczenia dla czytelnika. wystarczy id czytelnika
+        Zwraca wszystkie wypożyczenia dla czytelnika. wystarczy email czytelnika lub jeśli apiKey należy do czytelnika to nie trzeba nic
         {
-            "readerId": 4
+            "email": "miko"
         }
      */
     @GetMapping("/getRentals/apiKey={apiKey}")
-    public ResponseEntity<?> getAllRentalsForReader(@RequestBody Reader reader, @PathVariable String apiKey){
+    public ResponseEntity<?> getAllRentalsForReader(@RequestBody User user, @PathVariable String apiKey){
         if(registrationService.handleAuthentication(apiKey, List.of("reader","worker"))) return ResponseUtil.badRequestResponse("Authentication failed");
-        ServiceResponse<?> response = readerService.getAllRentalsForReader(reader);
+        String readerEmail = registrationService.getUserEmailForApiKey(apiKey);
+        if(!user.getEmail().isEmpty() || registrationService.getWorkerTypeForApiKey(apiKey).equals("worker"))
+            readerEmail = user.getEmail();
+        ServiceResponse<?> response = readerService.getAllRentalsForReader(readerEmail);
         if(response.getData().isEmpty()) return ResponseUtil.badRequestResponse(response.getMessage());
         return ResponseUtil.okResponse(response.getMessage(), "Rental", response.getData().get());
     }
@@ -173,13 +187,16 @@ public class BookController {
         Zwraca aktywne wypożyczenia dla czytelnika
 
         {
-            "readerId": 6
+            "email": "miko"
         }
      */
     @GetMapping("/getActiveRentals/apiKey={apiKey}")
-    public ResponseEntity<?> getActiveRentalsForReader(@RequestBody Reader reader, @PathVariable String apiKey){
+    public ResponseEntity<?> getActiveRentalsForReader(@RequestBody User user, @PathVariable String apiKey){
         if(registrationService.handleAuthentication(apiKey, List.of("reader","worker"))) return ResponseUtil.badRequestResponse("Authentication failed");
-        ServiceResponse<?> response = readerService.getAllActiveRentalsForReader(reader);
+        String readerEmail = registrationService.getUserEmailForApiKey(apiKey);
+        if(!user.getEmail().isEmpty() || registrationService.getWorkerTypeForApiKey(apiKey).equals("worker"))
+            readerEmail = user.getEmail();
+        ServiceResponse<?> response = readerService.getAllActiveRentalsForReader(readerEmail);
         if(response.getData().isEmpty()) return ResponseUtil.badRequestResponse(response.getMessage());
         return ResponseUtil.okResponse(response.getMessage(), "Rental", response.getData().get());
     }
@@ -232,13 +249,13 @@ public class BookController {
     /* dodaje rating użytkownika do książki, jeśli już był wystawiony rating to zmienia go.
            {
             "rating": 4,
-            "bookId": 3,
-            "readerId": 4
+            "bookId": 3
            }
      */
     @PostMapping("/addOrUpdateBookRating/apiKey={apiKey}")
     public ResponseEntity<?> addOrUpdateBookRating(@RequestBody BookRatingForm bookRatingForm, @PathVariable String apiKey){
         if(registrationService.handleAuthentication(apiKey, List.of("reader"))) return ResponseUtil.badRequestResponse("Authentication failed");
+        bookRatingForm.setReaderId(registrationService.getWorkerTypeIdForApiKey(apiKey));
         ServiceResponse<?> response = readerService.addOrUpdateBookRating(bookRatingForm);
         if(response.getData().isEmpty()) return ResponseUtil.badRequestResponse(response.getMessage());
         return ResponseUtil.okResponse(response.getMessage(), "Rating", response.getData().get());
@@ -263,22 +280,32 @@ public class BookController {
         zwraca rating dla danej książki i czytelnika
         {
             "bookId": 4,
-            "readerId": 5
         }
      */
     @GetMapping("/getRatingForBook/apiKey={apiKey}")
     public ResponseEntity<?> getRatingForBook(@RequestBody BookRatingForm bookRatingForm, @PathVariable String apiKey){
         if(registrationService.handleAuthentication(apiKey, List.of("reader","worker","warehouse manager"))) return ResponseUtil.badRequestResponse("Authentication failed");
+        bookRatingForm.setReaderId(registrationService.getWorkerTypeIdForApiKey(apiKey));
         Book book;
         Reader reader;
-        if(bookRepository.existsById(bookRatingForm.getBookId())) book =
-                bookRepository.findById(bookRatingForm.getBookId()).get();
+        if(bookRepository.existsById(bookRatingForm.getBookId()))
+            book = bookRepository.findById(bookRatingForm.getBookId()).get();
         else return ResponseUtil.badRequestResponse("no book found");
-        if(readerRepository.existsById(bookRatingForm.getReaderId())) reader =
-                readerRepository.findById(bookRatingForm.getReaderId()).get();
+        if(readerRepository.existsById(bookRatingForm.getReaderId()))
+            reader = readerRepository.findById(bookRatingForm.getReaderId()).get();
         else return ResponseUtil.badRequestResponse("no reader found");
         Optional<BookRating> bookRatingDb = bookRatingRepository.findByBookAndReader(book,reader);
         return bookRatingDb.map(rating -> ResponseUtil.okResponse("book rating found", "Book rating", rating))
                 .orElseGet(() -> ResponseUtil.badRequestResponse("No rating present"));
     }
+    // Używamy tego, bo wypożyczenia może pobierać czytelnik i pracownik
+    private String processEmail(String userEmail, String apiKey){
+        //dla czytelnika
+        String email = registrationService.getUserEmailForApiKey(apiKey);
+        // dla pracownika
+        if(userEmail!=null || registrationService.getWorkerTypeForApiKey(apiKey).equals("worker"))
+            email = userEmail;
+        return email;
+    }
+
 }

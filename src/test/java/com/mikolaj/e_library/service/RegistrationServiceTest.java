@@ -338,6 +338,9 @@ class RegistrationServiceTest {
         String apiKey = "new-api-key";
         String workerType = "worker";
 
+        when(workerRepository.existsByUserId(any())).thenReturn(true);
+        when(workerRepository.findById(any())).thenReturn(Optional.of(worker));
+
         registrationService.saveApiKey(userId, apiKey, workerType);
 
         ArgumentCaptor<ApiKey> apiKeyCaptor = ArgumentCaptor.forClass(ApiKey.class);
@@ -356,6 +359,9 @@ class RegistrationServiceTest {
         String apiKey = "new-api-key";
         String workerType = "worker";
 
+        when(workerRepository.existsByUserId(any())).thenReturn(true);
+        when(workerRepository.findById(any())).thenReturn(Optional.of(worker));
+
         registrationService.saveApiKey(userId, apiKey, workerType);
 
         ArgumentCaptor<ApiKey> apiKeyCaptor = ArgumentCaptor.forClass(ApiKey.class);
@@ -371,6 +377,8 @@ class RegistrationServiceTest {
         int userId = 1;
         String workerType = "worker";
 
+        when(workerRepository.existsByUserId(any())).thenReturn(true);
+        when(workerRepository.findById(any())).thenReturn(Optional.of(worker));
         // Test with null API key
         registrationService.saveApiKey(userId, null, workerType);
 
@@ -511,7 +519,7 @@ class RegistrationServiceTest {
         public void test_terminate_session_success() {
             // Generate a random API key for testing
             String apiKey = registrationService.generateApiKey();
-            ApiKey apiKey1 = new ApiKey(1,apiKey,1,"ACTIVE","worker");
+            ApiKey apiKey1 = new ApiKey(1,apiKey,1,"ACTIVE","worker",1);
 
             when(apiKeyRepository.findByApiKey(apiKey)).thenReturn(Optional.of(apiKey1));
 

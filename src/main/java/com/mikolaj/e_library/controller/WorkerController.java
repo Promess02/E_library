@@ -66,7 +66,6 @@ Zwraca książkę dla danego wypożyczenia. Wystarczy podać id w żądaniu
     /*
 Wypożycza książkę(Book.class) o danym id dla czytelnika z danym id na podaną liczbę tygodni
     {
-        "workerId": 4
         "readerEmail": "userEmail@wp.pl",
         "bookId": 4,
         "rentalInWeeks": 5
@@ -75,6 +74,7 @@ Wypożycza książkę(Book.class) o danym id dla czytelnika z danym id na podan�
     @PostMapping("/rent/apiKey={apiKey}")
     public ResponseEntity<?> rentBook(@RequestBody WorkerRentalForm rentalForm, @PathVariable String apiKey){
         if(registrationService.handleAuthentication(apiKey, List.of("reader", "worker"))) return ResponseUtil.badRequestResponse("Authentication failed");
+        rentalForm.setWorkerId(registrationService.getWorkerTypeIdForApiKey(apiKey));
         ServiceResponse<?> response = workerService.rentBookForReader(rentalForm);
         if(response.getData().isEmpty()) return ResponseUtil.badRequestResponse(response.getMessage());
         return ResponseUtil.okResponse(response.getMessage(), "Rental", response.getData().get());
@@ -82,7 +82,6 @@ Wypożycza książkę(Book.class) o danym id dla czytelnika z danym id na podan�
 
     /*
     {
-    "workerId": 1,
     "name": "nowy post",
     "contents": "zawartosc",
     "imageUrl": "/newimageurl"
@@ -91,6 +90,7 @@ Wypożycza książkę(Book.class) o danym id dla czytelnika z danym id na podan�
     @PostMapping("/addNewsPost/apiKey={apiKey}")
     public ResponseEntity<?> addNewsPost(@RequestBody AddNewsPostForm addNewsPostForm, @PathVariable String apiKey){
         if(registrationService.handleAuthentication(apiKey, List.of("worker"))) return ResponseUtil.badRequestResponse("Authentication failed");
+        addNewsPostForm.setWorkerId(registrationService.getWorkerTypeIdForApiKey(apiKey));
         ServiceResponse<?> response = workerService.addNewsPost(addNewsPostForm);
         if(response.getData().isEmpty()) return ResponseUtil.badRequestResponse(response.getMessage());
         return ResponseUtil.okResponse(response.getMessage(), "News post", response.getData().get());
@@ -99,7 +99,6 @@ Wypożycza książkę(Book.class) o danym id dla czytelnika z danym id na podan�
 
     /*
     {
-    "workerId": 1,
     "name": "nowy post",
     "newsPostId": 1,
     "contents": "zmieniona zawartość",
@@ -109,6 +108,7 @@ Wypożycza książkę(Book.class) o danym id dla czytelnika z danym id na podan�
     @PutMapping("/updateNewsPost/apiKey={apiKey}")
     public ResponseEntity<?> updateNewsPost(@RequestBody AddNewsPostForm addNewsPostForm, @PathVariable String apiKey){
         if(registrationService.handleAuthentication(apiKey, List.of("worker"))) return ResponseUtil.badRequestResponse("Authentication failed");
+        addNewsPostForm.setWorkerId(registrationService.getWorkerTypeIdForApiKey(apiKey));
         ServiceResponse<?> response = workerService.updateNewsPost(addNewsPostForm);
         if(response.getData().isEmpty()) return ResponseUtil.badRequestResponse(response.getMessage());
         return ResponseUtil.okResponse(response.getMessage(), "News post", response.getData().get());
@@ -118,7 +118,7 @@ Wypożycza książkę(Book.class) o danym id dla czytelnika z danym id na podan�
     W url żądania podajemy id posta do usunięcia. Przykład url:
     http://localhost:8080/worker/deleteNewsPost/post=1
  */
-    @DeleteMapping("/deleteNewsPost/postId={postId}/apikKey={apiKey}")
+    @DeleteMapping("/deleteNewsPost/postId={postId}/apiKey={apiKey}")
     public ResponseEntity<?> deleteNewsPost(@PathVariable int postId, @PathVariable String apiKey){
         if(registrationService.handleAuthentication(apiKey, List.of("worker"))) return ResponseUtil.badRequestResponse("Authentication failed");
         ServiceResponse<?> response = workerService.deleteNewsPost(postId);
@@ -146,8 +146,9 @@ Wypożycza książkę(Book.class) o danym id dla czytelnika z danym id na podan�
     @GetMapping("/getRentalsForUser/email={userEmail}/apiKey={apiKey}")
     public ResponseEntity<?> getActiveRentalsForUser(@PathVariable String userEmail, @PathVariable String apiKey){
         if(registrationService.handleAuthentication(apiKey, List.of("worker", "reader"))) return ResponseUtil.badRequestResponse("Authentication failed");
-        if(!userRepository.existsByEmail(userEmail)) return ResponseUtil.badRequestResponse("No user with given email found");
-        List<Rental> rentals = rentalRepository.findAllByReaderUserEmailAndStatus(userEmail, RentalStatus.ACTIVE);
+        String email = processEmail(userEmail, apiKey);
+        if(!userRepository.existsByEmail(email)) return ResponseUtil.badRequestResponse("No user with given email found");
+        List<Rental> rentals = rentalRepository.findAllByReaderUserEmailAndStatus(email, RentalStatus.ACTIVE);
         return  ResponseUtil.okResponse("found rentals", "Rentals: ", rentals);
     }
 
@@ -155,8 +156,9 @@ Wypożycza książkę(Book.class) o danym id dla czytelnika z danym id na podan�
     @GetMapping("/getAllRentalsForUser/email={userEmail}/apiKey={apiKey}")
     public ResponseEntity<?> getAllRentalsForUser(@PathVariable String userEmail, @PathVariable String apiKey){
         if(registrationService.handleAuthentication(apiKey, List.of("worker", "reader"))) return ResponseUtil.badRequestResponse("Authentication failed");
-        if(!userRepository.existsByEmail(userEmail)) return ResponseUtil.badRequestResponse("No user with given email found");
-        List<Rental> rentals = rentalRepository.findAllByReaderUserEmail(userEmail);
+        String email =processEmail(userEmail, apiKey);
+        if(!userRepository.existsByEmail(email)) return ResponseUtil.badRequestResponse("No user with given email found");
+        List<Rental> rentals = rentalRepository.findAllByReaderUserEmail(email);
         return  ResponseUtil.okResponse("found rentals", "Rentals: ", rentals);
     }
 
@@ -172,10 +174,11 @@ Wypożycza książkę(Book.class) o danym id dla czytelnika z danym id na podan�
     */
     // POLECAM NIE RUSZAC WYDAJE SIE DOBRZE DZIALAC
     // SORRY MUSIAŁ API KEY DODAĆ :'(
-    @PostMapping("/getAllRentalsForUser/email={userEmail}/paginated/apiKey={apiKey}")
-    public ResponseEntity<?> getAllRentalsForUserPaginated(@PathVariable String userEmail, @RequestBody Pagination pagination, @PathVariable String apiKey) {
+    @PostMapping("/getAllRentalsForUser/email={email}/paginated/apiKey={apiKey}")
+    public ResponseEntity<?> getAllRentalsForUserPaginated(@PathVariable String email, @RequestBody Pagination pagination, @PathVariable String apiKey) {
         if(registrationService.handleAuthentication(apiKey, List.of("worker", "reader"))) return ResponseUtil.badRequestResponse("Authentication failed");
         Page<Rental> rentalsPage;
+        String userEmail = processEmail(email, apiKey);
         if (pagination.getFilterBy().isEmpty()) {
             rentalsPage = rentalRepository.findByReaderUserEmail(userEmail, PageRequest.of(pagination.getPage(), pagination.getSize()));
         }
@@ -194,6 +197,14 @@ Wypożycza książkę(Book.class) o danym id dla czytelnika z danym id na podan�
         return ResponseUtil.okResponse("rentals found: ", "Rentals", rentalsPage);
     }
 
-
+    // Używamy tego, bo wypożyczenia może pobierać czytelnik i pracownik
+    private String processEmail(String userEmail, String apiKey){
+        //dla czytelnika
+        String email = registrationService.getUserEmailForApiKey(apiKey);
+        // dla pracownika
+        if(userEmail!=null || registrationService.getWorkerTypeForApiKey(apiKey).equals("worker"))
+            email = userEmail;
+        return email;
+    }
 
 }

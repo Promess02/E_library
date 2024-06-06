@@ -54,6 +54,7 @@ public class WorkerService {
             return new ServiceResponse<>(Optional.empty(), "No free copies found!");
 
         rentedCopy.setRentalStatus(RentalStatus.RENTED);
+        rentedCopy.setReader(reader.get());
         bookCopyRepository.save(rentedCopy);
         Rental rental = new Rental(reader.get(), rentedCopy, workerRentalForm.getRentalInWeeks());
         rental.setStatus(RentalStatus.ACTIVE);
@@ -90,6 +91,7 @@ public class WorkerService {
         }
         BookCopy copy = copyDb.get();
         copy.setRentalStatus(RentalStatus.FREE);
+        copy.setReader(rentalDb.getReader());
         bookCopyRepository.save(copy);
         rentalRepository.save(rentalDb);
 

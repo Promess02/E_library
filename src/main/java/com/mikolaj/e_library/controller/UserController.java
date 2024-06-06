@@ -88,13 +88,13 @@ public class UserController {
         "pesel": "121415",
         "payAccountNumber": "241441421",
         "address": "Zakatek 12",
-        "employerId": 2,
         "monthlyPay": 2345
     }
      */
     @PostMapping("/registerWorker/apiKey={apiKey}")
     public ResponseEntity<?> registerWorker(@RequestBody WorkerRegistrationForm workerRegistrationForm, @PathVariable String apiKey){
         if(registrationService.handleAuthentication(apiKey, List.of("employee Manager"))) return ResponseUtil.badRequestResponse("Authentication failed");
+        workerRegistrationForm.setEmployerId(registrationService.getWorkerTypeIdForApiKey(apiKey));
         ServiceResponse<?> response;
         if(workerRegistrationForm.getWorkerType().equalsIgnoreCase("worker")){
             response = registrationService.registerWorker(workerRegistrationForm);

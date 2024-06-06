@@ -54,8 +54,8 @@ public class ReaderService {
         if(!bookRepository.existsById(rentalForm.getBookId())) return new ServiceResponse<>(Optional.empty(), "Book Not Found");
         else book = bookRepository.findById(rentalForm.getBookId());
 
-        if(!readerRepository.existsById(rentalForm.getReaderId())) return new ServiceResponse<>(Optional.empty(), "Reader Not Found");
-        else reader = readerRepository.findById(rentalForm.getReaderId());
+        if(!readerRepository.existsByUserEmail(rentalForm.getReaderEmail())) return new ServiceResponse<>(Optional.empty(), "Reader Not Found");
+        else reader = readerRepository.findByUserEmail(rentalForm.getReaderEmail());
 
 
         List<BookCopy> copies = bookCopyRepository.findBookCopiesByBook(book.get());
@@ -71,6 +71,7 @@ public class ReaderService {
             return new ServiceResponse<>(Optional.empty(), "No free copies found!");
 
         rentedCopy.setRentalStatus(RentalStatus.RENTED);
+        rentedCopy.setReader(reader.get());
         bookCopyRepository.save(rentedCopy);
         Rental rental = new Rental(reader.get(), rentedCopy, rentalForm.getRentalInWeeks());
         rental.setStatus(RentalStatus.ACTIVE);
@@ -79,14 +80,18 @@ public class ReaderService {
         return new ServiceResponse<>(Optional.of(rental), "Rental saved");
     }
 
-    public ServiceResponse<List<Rental>> getAllRentalsForReader(Reader reader){
-        Optional<List<Rental>> list = rentalRepository.findAllByReader(reader);
+    public ServiceResponse<List<Rental>> getAllRentalsForReader(String email){
+        Optional<Reader> reader = readerRepository.findByUserEmail(email);
+        if(reader.isEmpty()) return new ServiceResponse<>(Optional.empty(), "Reader Not Found");
+        Optional<List<Rental>> list = rentalRepository.findAllByReader(reader.get());
         if(list.isEmpty()) return new ServiceResponse<>(Optional.empty(), "No Rental Found");
         return new ServiceResponse<>(list, "Rentals found");
     }
 
-    public ServiceResponse<List<Rental>> getAllActiveRentalsForReader(Reader reader){
-        Optional<List<Rental>> list = rentalRepository.findAllByReader(reader);
+    public ServiceResponse<List<Rental>> getAllActiveRentalsForReader(String email){
+        Optional<Reader> reader = readerRepository.findByUserEmail(email);
+        if(reader.isEmpty()) return new ServiceResponse<>(Optional.empty(), "Reader Not Found");
+        Optional<List<Rental>> list = rentalRepository.findAllByReader(reader.get());
         if(list.isEmpty()) return new ServiceResponse<>(Optional.empty(), "No active Rental Found");
         List<Rental> mathcingList = list.get().stream().filter(rental -> rental.getStatus().equals(RentalStatus.ACTIVE)).toList();
         return new ServiceResponse<>(Optional.of(mathcingList), "Active rentals found");
