@@ -88,7 +88,6 @@ public class UserController {
         "pesel": "121415",
         "payAccountNumber": "241441421",
         "address": "Zakatek 12",
-        "employerId": 2,
         "monthlyPay": 2345
     }
      */
