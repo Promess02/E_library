@@ -134,6 +134,39 @@ Wypożycza książkę(Book.class) o danym id dla czytelnika z danym id na podan�
         return ResponseUtil.okResponse("found readers", "Readers: ", readers);
     }
 
+
+    /*
+        {
+        "filter": "ada",
+        "filterBy": "title",
+        "page": 0,
+        "size": 3
+        }
+    */
+    @PostMapping("/getReadersPaginated/apiKey={apiKey}")
+    public ResponseEntity<?> getAllReadersPaginated(@RequestBody Pagination pagination, @PathVariable String apiKey){
+        if(registrationService.handleAuthentication(apiKey, List.of("worker"))) return ResponseUtil.badRequestResponse("Authentication failed");
+        Page<Reader> readersPage;
+
+        if (pagination.getFilterBy().isEmpty()) {
+            readersPage = readerRepository.findAll(PageRequest.of(pagination.getPage(), pagination.getSize()));
+        }
+        else if (pagination.getFilterBy().equals("email")) {
+            readersPage = readerRepository.findByUserEmailStartingWithIgnoreCase(pagination.getFilter(), PageRequest.of(pagination.getPage(), pagination.getSize()));
+        }
+        else if (pagination.getFilterBy().equals("surname")){
+            readersPage = readerRepository.findByUserSurnameStartingWithIgnoreCase(pagination.getFilter(), PageRequest.of(pagination.getPage(), pagination.getSize()));
+        }
+        else{
+            readersPage = readerRepository.findAll(PageRequest.of(pagination.getPage(), pagination.getSize()));
+        }
+
+        if (readersPage.isEmpty()) {
+            return ResponseUtil.okResponse("no readers found", "Reader", Optional.empty());
+        }
+        return ResponseUtil.okResponse("readers found: ", "Reader", readersPage);
+    }
+
     @GetMapping("/getNewsPosts/apiKey={apiKey}")
     public ResponseEntity<?> getAllNewsPosts(@PathVariable String apiKey){
         if(registrationService.handleAuthentication(apiKey, List.of("worker", "reader", "employee manager", "warehouse manager"))) return ResponseUtil.badRequestResponse("Authentication failed");
