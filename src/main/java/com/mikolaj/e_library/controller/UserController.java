@@ -1,9 +1,6 @@
 package com.mikolaj.e_library.controller;
 
-import com.mikolaj.e_library.DTO.LoginForm;
-import com.mikolaj.e_library.DTO.ResponseUtil;
-import com.mikolaj.e_library.DTO.ServiceResponse;
-import com.mikolaj.e_library.DTO.WorkerRegistrationForm;
+import com.mikolaj.e_library.DTO.*;
 import com.mikolaj.e_library.model.*;
 import com.mikolaj.e_library.service.LoginComponent;
 import com.mikolaj.e_library.service.RegistrationService;
@@ -107,6 +104,22 @@ public class UserController {
         }
         if(response.getData().isEmpty()) return ResponseUtil.badRequestResponse(response.getMessage());
         return ResponseUtil.okResponse(response.getMessage(),"Worker", response.getData());
+    }
+
+    /*
+         {
+         "oldPass": "stare_haslo",
+         "newPass": "nowe_haslo"
+         }
+     */
+    @PostMapping("/resetPassword/apiKey={apiKey}")
+    public ResponseEntity<?> resetPassword(@RequestBody ResetPassForm resetPassForm, @PathVariable String apiKey){
+        if(registrationService.handleAuthentication(apiKey, List.of("reader"))) return ResponseUtil.badRequestResponse("Authentication failed");
+        String email = registrationService.getUserEmailForApiKey(apiKey);
+        resetPassForm.setEmail(email);
+        ServiceResponse<?> response = registrationService.resetReaderPassword(resetPassForm);
+        if(response.getData().isEmpty()) return ResponseUtil.badRequestResponse(response.getMessage());
+        return ResponseUtil.okResponse(response.getMessage(), "User", response.getData());
     }
 
     /* Loguje wszystkie typy użytkowników.

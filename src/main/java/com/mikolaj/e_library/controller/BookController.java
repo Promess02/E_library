@@ -89,8 +89,22 @@ public class BookController {
         return ResponseUtil.okResponse(response.getMessage(), "BookCopy", response.getData());
     }
 
+    /*
+        {
+        "bookId": 2,
+        }
+     */
+    @PatchMapping("/cancelReservation/apiKey={apiKey}")
+    public ResponseEntity<?> cancelReservation(@RequestBody BookReservation reservation, @PathVariable String apiKey){
+        if(registrationService.handleAuthentication(apiKey, List.of("reader", "worker"))) return ResponseUtil.badRequestResponse("Authentication failed");
+        reservation.setReaderId(registrationService.getWorkerTypeIdForApiKey(apiKey));
+        ServiceResponse<BookCopy> response = readerService.cancelReservation(reservation.getBookId(), reservation.getReaderId());
+        if(response.getData().isEmpty()) return  ResponseUtil.badRequestResponse(response.getMessage());
+        return ResponseUtil.okResponse(response.getMessage(), "BookCopy", response.getData());
+    }
+
 /*
-Email może być pusty i wtedy wiemy, że użytkownik wysyła, jeżwki coś jest to pracownik
+Email może być pusty i wtedy wiemy, że użytkownik wysyła, jeżeli coś jest to pracownik
  {
     "readerEmail": ""
  }

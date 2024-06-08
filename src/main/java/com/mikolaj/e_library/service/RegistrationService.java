@@ -1,6 +1,7 @@
 package com.mikolaj.e_library.service;
 
 import com.mikolaj.e_library.DTO.LoginForm;
+import com.mikolaj.e_library.DTO.ResetPassForm;
 import com.mikolaj.e_library.DTO.ServiceResponse;
 import com.mikolaj.e_library.DTO.WorkerRegistrationForm;
 import com.mikolaj.e_library.model.*;
@@ -164,6 +165,16 @@ public class RegistrationService {
         return new ServiceResponse<>(warehouseManager, "Warehouse Manager logged in");
     }
 
+    public ServiceResponse<User> resetReaderPassword(ResetPassForm resetPassForm){
+        Optional<User> user = userRepository.findByEmail(resetPassForm.getEmail());
+        if(user.isEmpty()) return new ServiceResponse<>(Optional.empty(), "User with that email doesn't exist");
+        if(user.get().getPassword().equals(resetPassForm.getNewPass())) return new ServiceResponse<>(Optional.empty(), "New password is the same as old one");
+        user.get().setPassword(resetPassForm.getNewPass());
+        userRepository.save(user.get());
+        return new ServiceResponse<>(user, "Password reset");
+
+    }
+
     private ServiceResponse<Object> checkGivenEmployer(int employerId){
         if(employerId==0) return new ServiceResponse<>(Optional.empty(), "Employer nor provided");
         if(!employeeManagerRepository.existsById(employerId)){
@@ -246,10 +257,11 @@ public class RegistrationService {
             apiKeyRepository.save(apiKeyOptional.get());
         }
 
-
     public boolean handleAuthentication(String apiKey, List<String> userTypes){
         Optional<ApiKey> optionalApiKey = apiKeyRepository.findByApiKeyAndStatus(apiKey,"active");
         return !(optionalApiKey.isPresent() && userTypes.contains(optionalApiKey.get().getUserType()));
     }
+
+
 
 }
