@@ -64,7 +64,7 @@ public class BookCopy implements Serializable {
 	private Book book;
 
 	@OneToOne(fetch = FetchType.EAGER, optional = true)
-	@JoinColumn(name = "reader_id")
+	@JoinColumn(name = "reader_id", nullable = true)
 	private Reader reader;
 	
 //	@Column(name="addedBy", nullable=false, length=10)

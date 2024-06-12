@@ -169,6 +169,7 @@ public class RegistrationService {
         Optional<User> user = userRepository.findByEmail(resetPassForm.getEmail());
         if(user.isEmpty()) return new ServiceResponse<>(Optional.empty(), "User with that email doesn't exist");
         if(user.get().getPassword().equals(resetPassForm.getNewPass())) return new ServiceResponse<>(Optional.empty(), "New password is the same as old one");
+        if(!resetPassForm.getOldPass().equals(user.get().getPassword())) return new ServiceResponse<>(Optional.empty(), "Wrong old password");
         user.get().setPassword(resetPassForm.getNewPass());
         userRepository.save(user.get());
         return new ServiceResponse<>(user, "Password reset");

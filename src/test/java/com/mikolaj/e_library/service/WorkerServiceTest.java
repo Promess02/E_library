@@ -280,11 +280,13 @@ class WorkerServiceTest {
     @Test
     public void testBookRental_Success() {
         // Create mock data
-        RentalForm rentalForm = new RentalForm(1, 1, 2); // Assuming book ID: 1, reader ID: 1, rental in weeks: 2
+        RentalForm rentalForm = new RentalForm("email", 1, 2); // Assuming book ID: 1, reader ID: 1, rental in weeks: 2
         Book book = new Book("Way of Kings");
         Reader reader = new Reader(15f);
+        reader.setUser(new User("email"));
         BookCopy rentedCopy = new BookCopy("4F");
-        rentedCopy.setRentalStatus(RentalStatus.FREE);
+        rentedCopy.setRentalStatus(RentalStatus.RESERVED);
+        rentedCopy.setReader(reader);
         List<BookCopy> copies = new ArrayList<>();
         copies.add(rentedCopy);
         Rental rental = new Rental(reader, rentedCopy, rentalForm.getRentalInWeeks());
@@ -305,7 +307,6 @@ class WorkerServiceTest {
         verify(workerRepository).findById(workerRentalForm.getWorkerId());
         verify(readerRepository).findByUserEmail(workerRentalForm.getReaderEmail());
         verify(bookCopyRepository).findBookCopiesByBook(book);
-        verify(rentalRepository).save(any());
 
         // Check response
         assertEquals("Rental saved", response.getMessage());

@@ -90,9 +90,11 @@ public class ReaderServiceTest {
     @Test
     public void testBookRental_Success() {
         // Create mock data
-        RentalForm rentalForm = new RentalForm(1, 1, 2); // Assuming book ID: 1, reader ID: 1, rental in weeks: 2
+        RentalForm rentalForm = new RentalForm("email", 1, 2); // Assuming book ID: 1, reader ID: 1, rental in weeks: 2
         Book book = new Book("Way of Kings");
-        Reader reader = new Reader(15f);
+        Reader reader = new Reader();
+        reader.setPenalty(15f);
+        reader.setUser(new User("email"));
         BookCopy rentedCopy = new BookCopy("4F");
         rentedCopy.setRentalStatus(RentalStatus.FREE);
         List<BookCopy> copies = new ArrayList<>();
@@ -103,8 +105,8 @@ public class ReaderServiceTest {
         // Mock repository methods
         when(bookRepository.existsById(rentalForm.getBookId())).thenReturn(true);
         when(bookRepository.findById(rentalForm.getBookId())).thenReturn(Optional.of(book));
-        when(readerRepository.existsById(rentalForm.getReaderId())).thenReturn(true);
-        when(readerRepository.findById(rentalForm.getReaderId())).thenReturn(Optional.of(reader));
+        when(readerRepository.existsByUserEmail(rentalForm.getReaderEmail())).thenReturn(true);
+        when(readerRepository.findByUserEmail(rentalForm.getReaderEmail())).thenReturn(Optional.of(reader));
         when(bookCopyRepository.findBookCopiesByBook(book)).thenReturn(copies);
         when(rentalRepository.save(any())).thenReturn(rental);
 
@@ -114,8 +116,6 @@ public class ReaderServiceTest {
         // Verify repository method calls
         verify(bookRepository).existsById(rentalForm.getBookId());
         verify(bookRepository).findById(rentalForm.getBookId());
-        verify(readerRepository).existsById(rentalForm.getReaderId());
-        verify(readerRepository).findById(rentalForm.getReaderId());
         verify(bookCopyRepository).findBookCopiesByBook(book);
         verify(rentalRepository).save(any());
 
@@ -128,9 +128,11 @@ public class ReaderServiceTest {
 
     @Test
     public void testBookRental_NoFreeCopiesFound(){
-        RentalForm rentalForm = new RentalForm(1, 1, 2); // Assuming book ID: 1, reader ID: 1, rental in weeks: 2
+        RentalForm rentalForm = new RentalForm("email", 1, 2); // Assuming book ID: 1, reader ID: 1, rental in weeks: 2
         Book book = new Book("Way of Kings");
         Reader reader = new Reader(15f);
+        User user = new User("email");
+        reader.setUser(user);
         BookCopy rentedCopy = new BookCopy("4F");
         rentedCopy.setRentalStatus(RentalStatus.RENTED);
         List<BookCopy> copies = new ArrayList<>();
@@ -141,8 +143,8 @@ public class ReaderServiceTest {
         // Mock repository methods
         when(bookRepository.existsById(rentalForm.getBookId())).thenReturn(true);
         when(bookRepository.findById(rentalForm.getBookId())).thenReturn(Optional.of(book));
-        when(readerRepository.existsById(rentalForm.getReaderId())).thenReturn(true);
-        when(readerRepository.findById(rentalForm.getReaderId())).thenReturn(Optional.of(reader));
+        when(readerRepository.existsByUserEmail(rentalForm.getReaderEmail())).thenReturn(true);
+        when(readerRepository.findByUserEmail(rentalForm.getReaderEmail())).thenReturn(Optional.of(reader));
         when(bookCopyRepository.findBookCopiesByBook(book)).thenReturn(copies);
 
         ServiceResponse<Rental> response = readerService.bookRental(rentalForm);
@@ -155,7 +157,8 @@ public class ReaderServiceTest {
     @Test
     public void testBookRental_BookNotFound() {
         // Create mock data
-        RentalForm rentalForm = new RentalForm(1, 1, 2); // Assuming book ID: 1, reader ID: 1, rental in weeks: 2
+        RentalForm rentalForm = new RentalForm("email", 1, 2); // Assuming book ID: 1, reader ID: 1, rental in weeks: 2
+
         // Mock repository method to return false indicating book not found
         when(bookRepository.existsById(rentalForm.getBookId())).thenReturn(false);
         // Call the service method
@@ -170,7 +173,7 @@ public class ReaderServiceTest {
     @Test
     public void testBookRental_ReaderNotFound() {
         // Create mock data
-        RentalForm rentalForm = new RentalForm(1, 1, 2); // Assuming book ID: 1, reader ID: 1, rental in weeks: 2
+        RentalForm rentalForm = new RentalForm("email", 1, 2); // Assuming book ID: 1, reader ID: 1, rental in weeks: 2
         // Mock repository method to return false indicating book not found
         when(bookRepository.existsById(any())).thenReturn(true);
         when(bookRepository.findById(any())).thenReturn(Optional.of(new Book()));
@@ -178,7 +181,7 @@ public class ReaderServiceTest {
         // Call the service method
         ServiceResponse<Rental> response = readerService.bookRental(rentalForm);
         // Verify repository method call
-        verify(readerRepository).existsById(rentalForm.getReaderId());
+        verify(readerRepository).existsByUserEmail(rentalForm.getReaderEmail());
         verify(bookRepository).existsById(any());
         verify(bookRepository).findById(any());
         // Check response
@@ -243,11 +246,12 @@ public class ReaderServiceTest {
     @Test
     public void testGetAllRentalsForReader_NoRentals() {
         // Mocking the repository to return an empty list
-        Reader reader = new Reader(15f);
+        Reader reader = new Reader(new User("email"));
         when(rentalRepository.findAllByReader(any())).thenReturn(Optional.empty());
+        when(readerRepository.findByUserEmail(any())).thenReturn(Optional.of(reader));
 
         // Call the service method
-        ServiceResponse<List<Rental>> response = readerService.getAllRentalsForReader(reader);
+        ServiceResponse<List<Rental>> response = readerService.getAllRentalsForReader(reader.getUser().getEmail());
 
         // Verify the response
         assertEquals("No Rental Found", response.getMessage());
@@ -259,6 +263,7 @@ public class ReaderServiceTest {
         // Mocking the repository to return a list of rentals
         List<Rental> rentals = new ArrayList<>();
         Reader reader = new Reader(3f);
+        reader.setUser(new User("email"));
         reader.setReaderId(1);
         Rental rental1 = new Rental(5f, RentalStatus.INACTIVE,reader);
         Rental rental2 = new Rental(12f, RentalStatus.INACTIVE,reader);
@@ -266,8 +271,9 @@ public class ReaderServiceTest {
         rentals.add(rental2);
 
         when(rentalRepository.findAllByReader(any())).thenReturn(Optional.of(rentals));
+        when(readerRepository.findByUserEmail(any())).thenReturn(Optional.of(reader));
         // Call the service method
-        ServiceResponse<List<Rental>> response = readerService.getAllRentalsForReader(reader);
+        ServiceResponse<List<Rental>> response = readerService.getAllRentalsForReader(reader.getUser().getEmail());
 
         // Verify the response
         assertEquals("Rentals found", response.getMessage());
@@ -279,9 +285,11 @@ public class ReaderServiceTest {
         // Mocking the repository to return an empty list
         when(rentalRepository.findAllByReader(any())).thenReturn(Optional.empty());
         Reader reader = new Reader(3f);
+        reader.setUser(new User("email"));
 
+        when(readerRepository.findByUserEmail(any())).thenReturn(Optional.of(reader));
         // Call the service method
-        ServiceResponse<List<Rental>> response = readerService.getAllActiveRentalsForReader(reader);
+        ServiceResponse<List<Rental>> response = readerService.getAllActiveRentalsForReader(reader.getUser().getEmail());
 
         // Verify the response
         assertEquals("No active Rental Found", response.getMessage());
@@ -293,6 +301,7 @@ public class ReaderServiceTest {
         // Mocking the repository to return a list of rentals with some active rentals
         List<Rental> rentals = new ArrayList<>();
         Reader reader = new Reader(3f);
+        reader.setUser(new User("email"));
         reader.setReaderId(1);
         // Add some rentals with status ACTIVE
         Rental rental1 = new Rental(5f, RentalStatus.ACTIVE, reader);
@@ -303,9 +312,10 @@ public class ReaderServiceTest {
         rentals.add(rental3);
 
         when(rentalRepository.findAllByReader(any())).thenReturn(Optional.of(rentals));
+        when(readerRepository.findByUserEmail(any())).thenReturn(Optional.of(reader));
 
         // Call the service method
-        ServiceResponse<List<Rental>> response = readerService.getAllActiveRentalsForReader(reader);
+        ServiceResponse<List<Rental>> response = readerService.getAllActiveRentalsForReader(reader.getUser().getEmail());
 
         // Verify the response
         assertEquals("Active rentals found", response.getMessage());

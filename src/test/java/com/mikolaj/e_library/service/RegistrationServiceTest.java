@@ -1,6 +1,7 @@
 package com.mikolaj.e_library.service;
 
 import com.mikolaj.e_library.DTO.LoginForm;
+import com.mikolaj.e_library.DTO.ResetPassForm;
 import com.mikolaj.e_library.DTO.ServiceResponse;
 import com.mikolaj.e_library.DTO.WorkerRegistrationForm;
 import com.mikolaj.e_library.model.*;
@@ -333,62 +334,6 @@ class RegistrationServiceTest {
     }
 
     @Test
-    public void test_save_new_api_key_for_user() {
-        int userId = 1;
-        String apiKey = "new-api-key";
-        String workerType = "worker";
-
-        when(workerRepository.existsByUserId(any())).thenReturn(true);
-        when(workerRepository.findById(any())).thenReturn(Optional.of(worker));
-
-        registrationService.saveApiKey(userId, apiKey, workerType);
-
-        ArgumentCaptor<ApiKey> apiKeyCaptor = ArgumentCaptor.forClass(ApiKey.class);
-        verify(apiKeyRepository).save(apiKeyCaptor.capture());
-        ApiKey savedApiKey = apiKeyCaptor.getValue();
-
-        assertEquals(userId, savedApiKey.getUserId());
-        assertEquals(apiKey, savedApiKey.getApiKey());
-        assertEquals(workerType, savedApiKey.getUserType());
-        assertEquals("active", savedApiKey.getStatus());
-    }
-
-    @Test
-    public void test_handles_nonexistent_userId() {
-        int userId = -1;
-        String apiKey = "new-api-key";
-        String workerType = "worker";
-
-        when(workerRepository.existsByUserId(any())).thenReturn(true);
-        when(workerRepository.findById(any())).thenReturn(Optional.of(worker));
-
-        registrationService.saveApiKey(userId, apiKey, workerType);
-
-        ArgumentCaptor<ApiKey> apiKeyCaptor = ArgumentCaptor.forClass(ApiKey.class);
-        verify(apiKeyRepository).save(apiKeyCaptor.capture());
-        ApiKey savedApiKey = apiKeyCaptor.getValue();
-
-        assertEquals(userId, savedApiKey.getUserId());
-    }
-
-    @Test
-    public void test_manages_null_or_empty_api_key() {
-
-        int userId = 1;
-        String workerType = "worker";
-
-        when(workerRepository.existsByUserId(any())).thenReturn(true);
-        when(workerRepository.findById(any())).thenReturn(Optional.of(worker));
-        // Test with null API key
-        registrationService.saveApiKey(userId, null, workerType);
-
-        // Test with empty API key
-        registrationService.saveApiKey(userId, "", workerType);
-
-        verify(apiKeyRepository, times(2)).save(any(ApiKey.class));
-    }
-
-    @Test
     public void test_deals_with_invalid_worker_type_values() {
         int userId = 1;
         String apiKey = "new-api-key";
@@ -566,6 +511,154 @@ class RegistrationServiceTest {
             registrationService.terminateSession("");
             verify(apiKeyRepository, never()).findByApiKey(any());
         }
+
+    @Test
+    public void testResetReaderPassword_UserNotFound() {
+        ResetPassForm form = new ResetPassForm("nonexistent@example.com", "newPass");
+
+        when(userRepository.findByEmail(form.getEmail())).thenReturn(Optional.empty());
+
+        ServiceResponse<User> response = registrationService.resetReaderPassword(form);
+
+        assertTrue(response.getData().isEmpty());
+        assertEquals("User with that email doesn't exist", response.getMessage());
+    }
+
+    @Test
+    public void testResetReaderPassword_PasswordSameAsOld() {
+        User user = new User();
+        user.setPassword("oldPass");
+        ResetPassForm form = new ResetPassForm("user@example.com", "oldPass");
+
+        when(userRepository.findByEmail(form.getEmail())).thenReturn(Optional.of(user));
+
+        ServiceResponse<User> response = registrationService.resetReaderPassword(form);
+
+        assertTrue(response.getData().isEmpty());
+        assertEquals("New password is the same as old one", response.getMessage());
+    }
+
+    @Test
+    public void testResetReaderPassword_Success() {
+        User user = new User();
+        user.setPassword("oldPass");
+        ResetPassForm form = new ResetPassForm("oldPass", "newPass", "email");
+
+        when(userRepository.findByEmail("email")).thenReturn(Optional.of(user));
+
+        ServiceResponse<User> response = registrationService.resetReaderPassword(form);
+
+        assertTrue(response.getData().isPresent());
+        assertEquals("Password reset", response.getMessage());
+        assertEquals("newPass", user.getPassword());
+        verify(userRepository).save(user);
+    }
+
+    @Test
+    public void testGetWorkerTypeIdForApiKey_ApiKeyNotFound() {
+        when(apiKeyRepository.findByApiKeyAndStatus(anyString(), eq("active"))).thenReturn(Optional.empty());
+
+        int workerTypeId = registrationService.getWorkerTypeIdForApiKey("someKey");
+
+        assertEquals(-1, workerTypeId);
+    }
+
+    @Test
+    public void testGetWorkerTypeIdForApiKey_Success() {
+        ApiKey apiKey = new ApiKey();
+        apiKey.setWorkerTypeId(123);
+        when(apiKeyRepository.findByApiKeyAndStatus(anyString(), eq("active"))).thenReturn(Optional.of(apiKey));
+
+        int workerTypeId = registrationService.getWorkerTypeIdForApiKey("someKey");
+
+        assertEquals(123, workerTypeId);
+    }
+
+    @Test
+    public void testGetWorkerTypeForApiKey_ApiKeyNotFound() {
+        when(apiKeyRepository.findByApiKeyAndStatus(anyString(), eq("active"))).thenReturn(Optional.empty());
+
+        String workerType = registrationService.getWorkerTypeForApiKey("someKey");
+
+        assertEquals("user", workerType);
+    }
+
+    @Test
+    public void testGetWorkerTypeForApiKey_Success() {
+        ApiKey apiKey = new ApiKey();
+        apiKey.setUserType("worker");
+        when(apiKeyRepository.findByApiKeyAndStatus(anyString(), eq("active"))).thenReturn(Optional.of(apiKey));
+
+        String workerType = registrationService.getWorkerTypeForApiKey("someKey");
+
+        assertEquals("worker", workerType);
+    }
+
+    @Test
+    public void testGetUserEmailForApiKey_ApiKeyNotFound() {
+        when(apiKeyRepository.findByApiKeyAndStatus(anyString(), eq("active"))).thenReturn(Optional.empty());
+
+        String email = registrationService.getUserEmailForApiKey("someKey");
+
+        assertEquals("", email);
+    }
+
+    @Test
+    public void testGetUserEmailForApiKey_UserNotFound() {
+        ApiKey apiKey = new ApiKey();
+        apiKey.setUserId(1);
+        when(apiKeyRepository.findByApiKeyAndStatus(anyString(), eq("active"))).thenReturn(Optional.of(apiKey));
+        when(userRepository.findById(anyInt())).thenReturn(Optional.empty());
+
+        String email = registrationService.getUserEmailForApiKey("someKey");
+
+        assertEquals("", email);
+    }
+
+    @Test
+    public void testGetUserEmailForApiKey_Success() {
+        ApiKey apiKey = new ApiKey();
+        apiKey.setUserId(1);
+        User user = new User();
+        user.setEmail("user@example.com");
+
+        when(apiKeyRepository.findByApiKeyAndStatus(anyString(), eq("active"))).thenReturn(Optional.of(apiKey));
+        when(userRepository.findById(anyInt())).thenReturn(Optional.of(user));
+
+        String email = registrationService.getUserEmailForApiKey("someKey");
+
+        assertEquals("user@example.com", email);
+    }
+
+    @Test
+    public void testSaveApiKey_NoWorkerFound() {
+        int userId = 1;
+        String apiKey = "someApiKey";
+
+        when(workerRepository.existsByUserId(anyInt())).thenReturn(false);
+
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            registrationService.saveApiKey(userId, apiKey, "worker");
+        });
+
+        assertEquals("No worker for given id found", exception.getMessage());
+    }
+
+    @Test
+    public void testSaveApiKey_Success() {
+        int userId = 1;
+        String apiKey = "someApiKey";
+        Worker worker = new Worker();
+        worker.setWorkerId(10);
+
+        when(workerRepository.existsByUserId(anyInt())).thenReturn(true);
+        when(workerRepository.findByUserId(anyInt())).thenReturn(Optional.of(worker));
+
+        registrationService.saveApiKey(userId, apiKey, "worker");
+
+        verify(apiKeyRepository).deleteAllByUserIdAndStatus(userId, "active");
+        verify(apiKeyRepository).save(any(ApiKey.class));
+    }
 
 
 

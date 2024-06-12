@@ -12,5 +12,5 @@ import java.util.Optional;
 public interface BookCopyRepository extends JpaRepository<BookCopy, Integer> {
     List<BookCopy> findBookCopiesByBook(Book book);
     List<BookCopy> findBookCopiesByReaderAndRentalStatus(Reader reader, RentalStatus rentalStatus);
-    Optional<BookCopy> findBookCopyByBookAndReader(Book book, Reader reader);
+    List<BookCopy> findBookCopyByBookAndReader(Book book, Reader reader);
 }

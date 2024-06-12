@@ -239,16 +239,18 @@ public class ReaderService {
         return new ServiceResponse<>(Optional.of(returnValue), "Book rating updated");
     }
 
+    @Transactional
     public ServiceResponse<BookCopy> cancelReservation(int bookId, int readerId) {
         Optional<Reader> reader = readerRepository.findById(readerId);
         if(reader.isEmpty()) return new ServiceResponse<>(Optional.empty(),"Reader not found");
         Optional<Book> book = bookRepository.findById(bookId);
         if(book.isEmpty()) return new ServiceResponse<>(Optional.empty(), "Book not found");
-        Optional<BookCopy> reservedCopy = bookCopyRepository.findBookCopyByBookAndReader(book.get(),reader.get());
-        if(reservedCopy.isEmpty()) return new ServiceResponse<>(Optional.empty(), "No reservation found");
-        reservedCopy.get().setRentalStatus(RentalStatus.FREE);
-        reservedCopy.get().setReader(null);
-        bookCopyRepository.save(reservedCopy.get());
-        return new ServiceResponse<>(reservedCopy, "Reservation canceled");
+        List<BookCopy> reservedCopyList = bookCopyRepository.findBookCopyByBookAndReader(book.get(),reader.get());
+        if(reservedCopyList.isEmpty()) return new ServiceResponse<>(Optional.empty(), "No reservation found");
+        BookCopy reservedCopy = reservedCopyList.get(0);
+        reservedCopy.setRentalStatus(RentalStatus.FREE);
+        reservedCopy.setReader(null);
+        bookCopyRepository.save(reservedCopy);
+        return new ServiceResponse<>(Optional.of(reservedCopy), "Reservation canceled");
     }
 }
